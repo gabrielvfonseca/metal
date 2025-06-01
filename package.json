@@ -13,6 +13,7 @@
     "clean": "turbo run clean",
     "lint": "npx @biomejs/biome check .",
     "format": "npx @biomejs/biome format .",
+    "format:check": "npx @biomejs/biome check --apply=false .",
     "typecheck": "turbo run typecheck",
     "prepare": "husky",
     "test": "echo 'No tests yet' && exit 0",
