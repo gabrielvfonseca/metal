@@ -1,0 +1,22 @@
+{
+  "seo": {
+    "metatags": {
+      "description": "Metal - AI-Powered Context Switching CLI Tool. Eliminate productivity loss from context switching with intelligent state capture and resumption.",
+      "keywords": "context switching, productivity, AI, CLI, developer tools, workflow automation",
+      "author": "Gabriel Fonseca",
+      "robots": "index, follow",
+      "theme-color": "#6366F1",
+      "color-scheme": "light dark",
+      "og:title": "Metal - AI-Powered Context Switching CLI Tool",
+      "og:type": "website",
+      "og:description": "Eliminate productivity loss from context switching with intelligent state capture and resumption.",
+      "og:site_name": "Metal",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Metal - AI-Powered Context Switching CLI Tool",
+      "twitter:description": "Eliminate productivity loss from context switching with intelligent state capture and resumption.",
+      "twitter:creator": "@gabrielvfonseca"
+    },
+    "indexing": "all"
+  }
+}

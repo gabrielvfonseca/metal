@@ -1,0 +1,105 @@
+---
+title: 'Context Analysis'
+description: 'Learn how Metal uses AI to understand your work context'
+'og:title': 'Context Analysis - Metal Documentation'
+'og:description': 'Learn how Metal leverages AI to understand your work patterns, priorities, and focus areas'
+'og:type': 'article'
+'og:site_name': 'Metal'
+'twitter:card': 'summary'
+'twitter:title': 'Context Analysis - Metal Documentation'
+'twitter:description': 'Learn how Metal leverages AI to understand your work patterns, priorities, and focus areas'
+---
+
+## Overview
+
+Metal's context analysis system uses AI to understand your work patterns, priorities, and focus areas, helping you maintain productivity across different tasks.
+
+## How It Works
+
+<CardGroup cols={2}>
+  <Card title="Pattern Recognition" icon="chart-line">
+    Identifies recurring work patterns and habits
+  </Card>
+  <Card title="Priority Detection" icon="flag">
+    Analyzes task importance and deadlines
+  </Card>
+  <Card title="Focus Analysis" icon="bullseye">
+    Tracks attention and concentration patterns
+  </Card>
+  <Card title="Context Mapping" icon="map">
+    Creates relationships between related tasks
+  </Card>
+</CardGroup>
+
+## AI Integration
+
+Metal uses advanced AI models to analyze your work context:
+
+1. **Natural Language Processing**
+
+   - Understands task descriptions
+   - Analyzes communication context
+   - Extracts key information
+
+2. **Code Analysis**
+
+   - Identifies project structure
+   - Understands code dependencies
+   - Tracks development patterns
+
+3. **Workflow Analysis**
+   - Maps task relationships
+   - Identifies bottlenecks
+   - Suggests optimizations
+
+## Configuration
+
+You can customize the AI analysis through environment variables:
+
+```bash
+# AI Model Settings
+METAL_AI_MODEL=gpt-4
+METAL_ANALYSIS_DEPTH=high
+METAL_LEARNING_RATE=0.1
+
+# Analysis Features
+METAL_ANALYZE_CODE=true
+METAL_ANALYZE_COMMS=true
+METAL_ANALYZE_WORKFLOW=true
+```
+
+## Privacy and Security
+
+<AccordionGroup>
+  <Accordion title="Data Handling">
+    All analysis is performed locally by default. Cloud analysis requires explicit opt-in.
+  </Accordion>
+  <Accordion title="Model Selection">
+    Choose between different AI models based on your privacy requirements.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Improving Accuracy">
+    - Provide clear task descriptions - Use consistent naming conventions - Maintain organized
+    project structure
+  </Accordion>
+  <Accordion title="Performance Optimization">
+    - Adjust analysis depth based on needs - Schedule heavy analysis during idle time - Use
+    appropriate model size
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Inaccurate Analysis">
+    If analysis seems incorrect: - Check task descriptions - Verify project structure - Adjust
+    analysis parameters
+  </Accordion>
+  <Accordion title="Performance Issues">
+    If analysis is slow: - Reduce analysis depth - Use lighter AI model - Schedule during off-hours
+  </Accordion>
+</AccordionGroup>

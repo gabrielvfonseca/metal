@@ -1,0 +1,102 @@
+---
+title: 'Development Setup'
+description: 'Learn how to set up your development environment for Metal'
+'og:title': 'Development Setup - Metal Documentation'
+'og:description': 'Learn how to set up your development environment for contributing to Metal'
+'og:type': 'article'
+'og:site_name': 'Metal'
+'twitter:card': 'summary'
+'twitter:title': 'Development Setup - Metal Documentation'
+'twitter:description': 'Learn how to set up your development environment for contributing to Metal'
+---
+
+## Overview
+
+This guide will help you set up your development environment for contributing to Metal.
+
+## Prerequisites
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18 or higher
+  </Card>
+  <Card title="Git" icon="git">
+    Latest stable version
+  </Card>
+  <Card title="Rust" icon="rust">
+    Latest stable version
+  </Card>
+  <Card title="Editor" icon="code">
+    VS Code recommended
+  </Card>
+</CardGroup>
+
+## Installation Steps
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/yourusername/metal.git
+   cd metal
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   # Install Node.js dependencies
+   pnpm install
+
+   # Install Rust dependencies
+   cargo build
+   ```
+
+3. **Configure Environment**
+
+   ```bash
+   # Copy example environment file
+   cp .env.example .env
+
+   # Edit .env with your settings
+   ```
+
+4. **Build the Project**
+
+   ```bash
+   # Build the CLI
+   pnpm build
+
+   # Build the documentation
+   cd docs
+   pnpm build
+   ```
+
+## Development Tools
+
+<AccordionGroup>
+  <Accordion title="VS Code Extensions">- Rust Analyzer - ESLint - Prettier - GitLens</Accordion>
+  <Accordion title="CLI Tools">- cargo-watch - rustfmt - clippy</Accordion>
+</AccordionGroup>
+
+## Testing
+
+```bash
+# Run unit tests
+pnpm test
+
+# Run integration tests
+pnpm test:integration
+
+# Run Rust tests
+cargo test
+```
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Build Failures">
+    - Ensure all dependencies are installed - Check Rust toolchain version - Verify Node.js version
+  </Accordion>
+  <Accordion title="Test Failures">
+    - Check test environment setup - Verify test data - Review test logs
+  </Accordion>
+</AccordionGroup>{' '}

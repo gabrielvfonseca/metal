@@ -1,0 +1,147 @@
+---
+title: 'API Reference'
+description: 'Learn how to integrate with Metal programmatically'
+---
+
+## Overview
+
+Metal provides a comprehensive API that allows you to integrate its context switching capabilities into your own applications and workflows.
+
+## API Structure
+
+<CardGroup cols={2}>
+  <Card title="REST API" icon="server">
+    HTTP endpoints for remote integration
+  </Card>
+  <Card title="CLI API" icon="terminal">
+    Command-line interface for automation
+  </Card>
+  <Card title="WebSocket API" icon="plug">
+    Real-time event streaming
+  </Card>
+  <Card title="Library API" icon="code">
+    Programmatic integration
+  </Card>
+</CardGroup>
+
+## Authentication
+
+Metal uses API keys for authentication. You can generate an API key in the dashboard:
+
+```bash
+# Set your API key
+export METAL_API_KEY=your_api_key_here
+
+# Or use in requests
+curl -H "Authorization: Bearer your_api_key_here" https://api.metal.dev/v1/...
+```
+
+## Base URL
+
+All API endpoints are relative to the base URL:
+
+```
+https://api.metal.dev/v1
+```
+
+## Rate Limits
+
+API requests are subject to rate limits:
+
+- 100 requests per minute for standard plans
+- 1000 requests per minute for premium plans
+- Rate limit headers are included in responses
+
+## Error Handling
+
+The API uses standard HTTP status codes and returns detailed error messages:
+
+```json
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Rate limit exceeded",
+    "details": {
+      "limit": 100,
+      "reset": "2024-03-20T12:00:00Z"
+    }
+  }
+}
+```
+
+## Versioning
+
+The API is versioned using the URL path. The current version is v1:
+
+```
+https://api.metal.dev/v1/...
+```
+
+## SDKs
+
+Official SDKs are available for popular languages:
+
+<CodeGroup>
+
+```bash npm
+npm install @metal/sdk
+```
+
+```bash pip
+pip install metal-sdk
+```
+
+```bash go
+go get github.com/metal/sdk
+```
+
+</CodeGroup>
+
+## Examples
+
+<AccordionGroup>
+  <Accordion title="Capture State">
+    ```javascript
+    const metal = new Metal({
+      apiKey: process.env.METAL_API_KEY
+    });
+
+    await metal.captureState({
+      project: "my-project",
+      context: "development"
+    });
+    ```
+
+  </Accordion>
+  <Accordion title="Resume Context">
+    ```javascript
+    const state = await metal.resumeContext({
+      project: "my-project",
+      from: "2h ago"
+    });
+    ```
+  </Accordion>
+  <Accordion title="Stream Events">
+    ```javascript
+    const stream = await metal.streamEvents({
+      project: "my-project"
+    });
+
+    stream.on("interruption", (event) => {
+      console.log("Interruption detected:", event);
+    });
+    ```
+
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Error Handling">
+    - Always check for errors - Implement retry logic - Handle rate limits
+  </Accordion>
+  <Accordion title="Performance">
+    - Use appropriate timeouts - Implement caching - Batch requests when possible
+  </Accordion>
+</AccordionGroup>

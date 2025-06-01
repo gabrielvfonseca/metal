@@ -1,0 +1,98 @@
+---
+title: 'State Capture'
+description: 'Learn how Metal captures and maintains your work context'
+'og:title': 'State Capture - Metal Documentation'
+'og:description': 'Learn how Metal automatically tracks and maintains your work context with intelligent state capture'
+'og:type': 'article'
+'og:site_name': 'Metal'
+'twitter:card': 'summary'
+'twitter:title': 'State Capture - Metal Documentation'
+'twitter:description': 'Learn how Metal automatically tracks and maintains your work context with intelligent state capture'
+---
+
+## Overview
+
+Metal's state capture system automatically tracks and maintains your work context, ensuring you never lose your place when switching between tasks.
+
+## What Gets Captured
+
+<CardGroup cols={2}>
+  <Card title="File Changes" icon="file-code">
+    Tracks open files, recent changes, and file history
+  </Card>
+  <Card title="Git State" icon="code-branch">
+    Monitors branch status, commits, and pending changes
+  </Card>
+  <Card title="Terminal History" icon="terminal">
+    Records command history and active processes
+  </Card>
+  <Card title="Editor State" icon="code">
+    Captures cursor position, selections, and open tabs
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Metal uses a combination of file system watchers, Git hooks, and editor integrations to maintain a comprehensive view of your work state:
+
+1. **Continuous Monitoring**
+
+   - Background daemon watches for changes
+   - Real-time updates to state information
+   - Efficient resource usage
+
+2. **State Persistence**
+
+   - Automatic state saving
+   - Configurable retention periods
+   - Secure storage of sensitive data
+
+3. **Context Analysis**
+   - AI-powered context understanding
+   - Smart state prioritization
+   - Relevant information extraction
+
+## Configuration
+
+You can customize state capture behavior through environment variables or the configuration file:
+
+```bash
+# Enable/disable specific capture features
+METAL_CAPTURE_FILES=true
+METAL_CAPTURE_GIT=true
+METAL_CAPTURE_TERMINAL=true
+
+# Set capture intervals
+METAL_CAPTURE_INTERVAL=5000  # milliseconds
+
+# Configure retention
+METAL_STATE_RETENTION=7d     # days
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Optimize Performance">
+    Adjust capture intervals based on your workflow. Lower intervals provide more detailed state but
+    use more resources.
+  </Accordion>
+  <Accordion title="Manage Storage">
+    Configure retention periods to balance state history with storage usage.
+  </Accordion>
+  <Accordion title="Security Considerations">
+    Review captured data to ensure sensitive information is properly handled.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="High Resource Usage">
+    If Metal is using too many resources, try: - Increasing capture intervals - Disabling
+    unnecessary capture features - Reducing retention period
+  </Accordion>
+  <Accordion title="Missing State">
+    If state capture seems incomplete: - Check file permissions - Verify Git hooks are installed -
+    Ensure editor integration is active
+  </Accordion>
+</AccordionGroup>

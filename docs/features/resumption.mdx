@@ -1,0 +1,107 @@
+---
+title: 'Smart Resumption'
+description: 'Learn how Metal helps you get back to work quickly'
+'og:title': 'Smart Resumption - Metal Documentation'
+'og:description': 'Learn how Metal helps you quickly return to work after interruptions with intelligent context restoration'
+'og:type': 'article'
+'og:site_name': 'Metal'
+'twitter:card': 'summary'
+'twitter:title': 'Smart Resumption - Metal Documentation'
+'twitter:description': 'Learn how Metal helps you quickly return to work after interruptions with intelligent context restoration'
+---
+
+## Overview
+
+Metal's smart resumption system helps you quickly return to work after interruptions, minimizing productivity loss and maintaining your flow state.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Context Summary" icon="clipboard-list">
+    Provides a quick overview of your previous work state
+  </Card>
+  <Card title="Task Continuation" icon="play">
+    Helps you pick up exactly where you left off
+  </Card>
+  <Card title="Quick Actions" icon="bolt">
+    Offers relevant actions based on your context
+  </Card>
+  <Card title="Progress Tracking" icon="chart-bar">
+    Shows your work progress and next steps
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Metal's resumption system follows these steps:
+
+1. **State Recovery**
+
+   - Restores open files and positions
+   - Recovers terminal state
+   - Reinstates editor settings
+
+2. **Context Restoration**
+
+   - Rebuilds work environment
+   - Restores project context
+   - Reconnects dependencies
+
+3. **Intelligent Assistance**
+   - Suggests next actions
+   - Highlights important changes
+   - Provides relevant reminders
+
+## Usage
+
+Use the following commands to manage resumption:
+
+```bash
+# Basic resumption
+metal resume
+
+# Resume specific context
+metal resume --context "feature-x"
+
+# Time-based resumption
+metal resume --since "2h ago"
+```
+
+## Configuration
+
+Customize resumption behavior through environment variables:
+
+```bash
+# Resumption Settings
+METAL_RESUME_AUTO=true
+METAL_RESUME_DEPTH=high
+METAL_RESUME_NOTIFY=true
+
+# Notification Settings
+METAL_NOTIFY_BEFORE=5m
+METAL_NOTIFY_CHANNEL=desktop
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Effective Use">
+    - Use descriptive context names - Set appropriate resumption depth - Configure notifications
+  </Accordion>
+  <Accordion title="Performance">
+    - Balance state capture with speed - Use appropriate resumption depth - Configure auto-resume
+    carefully
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Missing Context">
+    If context is not restored: - Check state capture settings - Verify file permissions - Review
+    error logs
+  </Accordion>
+  <Accordion title="Slow Resumption">
+    If resumption is slow: - Reduce capture depth - Optimize state storage - Check system resources
+  </Accordion>
+</AccordionGroup>

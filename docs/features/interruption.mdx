@@ -1,0 +1,112 @@
+---
+title: 'Interruption Management'
+description: 'Learn how Metal helps manage and minimize interruptions'
+'og:title': 'Interruption Management - Metal Documentation'
+'og:description': 'Learn how Metal helps you handle interruptions gracefully while preserving your work context'
+'og:type': 'article'
+'og:site_name': 'Metal'
+'twitter:card': 'summary'
+'twitter:title': 'Interruption Management - Metal Documentation'
+'twitter:description': 'Learn how Metal helps you handle interruptions gracefully while preserving your work context'
+---
+
+## Overview
+
+Metal's interruption management system helps you handle interruptions gracefully while preserving your work context and minimizing productivity loss.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="State Preservation" icon="save">
+    Automatically saves your work state
+  </Card>
+  <Card title="Priority Management" icon="flag">
+    Helps prioritize interruptions
+  </Card>
+  <Card title="Focus Protection" icon="shield">
+    Minimizes context switching impact
+  </Card>
+  <Card title="Transition Assistance" icon="arrows-split-up-and-left">
+    Smooths the transition process
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Metal's interruption management follows these steps:
+
+1. **Interruption Detection**
+
+   - Monitors system events
+   - Identifies potential interruptions
+   - Assesses interruption priority
+
+2. **State Management**
+
+   - Captures current work state
+   - Preserves important context
+   - Prepares for resumption
+
+3. **Recovery Assistance**
+   - Provides transition guidance
+   - Suggests next steps
+   - Maintains work continuity
+
+## Configuration
+
+Customize interruption handling through environment variables:
+
+```bash
+# Interruption Settings
+METAL_INTERRUPT_DETECT=true
+METAL_INTERRUPT_NOTIFY=true
+METAL_INTERRUPT_DELAY=5s
+
+# Notification Settings
+METAL_NOTIFY_CHANNEL=desktop
+METAL_NOTIFY_PRIORITY=high
+```
+
+## Usage
+
+Manage interruptions with these commands:
+
+```bash
+# Manual interruption
+metal interrupt
+
+# View interruption history
+metal interrupt --history
+
+# Resume after interruption
+metal resume
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Effective Management">
+    - Configure appropriate detection sensitivity - Set up notification preferences - Use manual
+    interruption when needed
+  </Accordion>
+  <Accordion title="Focus Protection">
+    - Set up focus blocks - Configure priority levels - Use do-not-disturb mode
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="False Detections">
+    If interruptions are detected incorrectly: - Adjust detection sensitivity - Review system events
+    - Update detection rules
+  </Accordion>
+  <Accordion title="State Preservation">
+    If state is not preserved: - Check capture settings - Verify file permissions - Review error
+    logs
+  </Accordion>
+  <Accordion title="State Issues">
+    If state preservation fails: - Check auto-save settings - Verify backup configuration - Review
+    system permissions
+  </Accordion>
+</AccordionGroup>

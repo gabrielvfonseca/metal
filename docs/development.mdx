@@ -1,0 +1,127 @@
+---
+title: 'Development'
+description: 'Learn how to develop and contribute to Metal'
+---
+
+<Info>
+  **Prerequisites** You should have installed: - Node.js (version 18.10.0 or higher) - pnpm (version
+  8.15.4 or higher) - Git
+</Info>
+
+## Development Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/gabrielvfonseca/metal.git
+cd metal
+```
+
+2. Install dependencies:
+
+```bash
+pnpm install
+```
+
+3. Start development mode:
+
+```bash
+pnpm dev
+```
+
+This will start all services in development mode:
+
+- CLI application
+- Background daemon
+- Optional web dashboard
+
+## Available Scripts
+
+<CodeGroup>
+
+```bash npm
+# Start development mode
+pnpm dev
+
+# Build all packages and applications
+pnpm build
+
+# Run all tests
+pnpm test
+
+# Run linting
+pnpm lint
+
+# Run type checking
+pnpm type-check
+```
+
+</CodeGroup>
+
+## Project Structure
+
+Metal is organized as a monorepo with the following structure:
+
+```
+metal/
+├── apps/
+│   ├── cli/                 # Main CLI application
+│   ├── daemon/              # Background service
+│   └── dashboard/           # Optional web interface
+├── packages/
+│   ├── core/               # Shared business logic
+│   ├── ai/                 # AI integration layer
+│   ├── capture/            # State capture utilities
+│   ├── config/             # Configuration management
+│   └── types/              # Shared TypeScript types
+└── tools/
+    ├── eslint-config/
+    └── tsconfig/
+```
+
+## Development Workflow
+
+1. Create a new branch for your feature or fix:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+2. Make your changes and test them:
+
+```bash
+pnpm test
+pnpm lint
+pnpm type-check
+```
+
+3. Commit your changes following the conventional commit format:
+
+```bash
+git commit -m "feat: add new feature"
+```
+
+4. Push your changes and create a pull request:
+
+```bash
+git push origin feature/your-feature-name
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build errors">
+    Try cleaning the build cache and rebuilding: ```bash pnpm clean pnpm build ```
+  </Accordion>
+  <Accordion title="Type errors">
+    Make sure all dependencies are installed and run type checking: ```bash pnpm install pnpm
+    type-check ```
+  </Accordion>
+  <Accordion title="Test failures">
+    Run tests with verbose output to see more details: ```bash pnpm test --verbose ```
+  </Accordion>
+</AccordionGroup>
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](/contributing) for more details on how to get involved.
