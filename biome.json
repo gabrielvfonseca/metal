@@ -34,32 +34,19 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "correctness": {
-        "noUndeclaredDependencies": "off",
-        "useImportExtensions": "off",
-        "noNodejsModules": "off",
-        "useExhaustiveDependencies": "off"
-      },
       "style": {
-        "useNodejsImportProtocol": "off",
         "useNamingConvention": {
           "level": "off"
         }
       },
       "suspicious": {
-        "noConsole": "off",
         "noArrayIndexKey": "off",
         "noExplicitAny": "off"
-      },
-      "nursery": {
-        "useSortedClasses": "off"
       },
       "complexity": {
         "noForEach": "off"
       },
       "a11y": {
-        "useFocusableInteractive": "off",
-        "useSemanticElements": "off",
         "noRedundantRoles": "off"
       }
     }
@@ -67,7 +54,7 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "trailingCommas": "es5",
+      "trailingComma": "es5",
       "semicolons": "always"
     }
   },
@@ -80,8 +67,7 @@
       "quoteStyle": "double"
     },
     "parser": {
-      "allowWrongLineComments": false,
-      "cssModules": false
+      "allowWrongLineComments": false
     }
   },
   "json": {
@@ -90,11 +76,7 @@
       "indentStyle": "space",
       "indentWidth": 2,
       "lineEnding": "lf",
-      "lineWidth": 80,
-      "trailingCommas": "none"
-    },
-    "linter": {
-      "enabled": true
+      "lineWidth": 80
     },
     "parser": {
       "allowComments": false,

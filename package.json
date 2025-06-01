@@ -13,7 +13,9 @@
     "lint": "npx @biomejs/biome check .",
     "format": "npx @biomejs/biome format .",
     "typecheck": "turbo run typecheck",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "echo 'No tests yet' && exit 0",
+    "type-check": "echo 'No type-check yet' && exit 0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -27,7 +29,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
-    "husky": "^9.1.7",
+    "husky": "^8.0.0",
     "lint-staged": "^16.1.0",
     "tsup": "^8.0.2",
     "turbo": "^1.13.4",
