@@ -1,0 +1,25 @@
+{
+  "name": "metal",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "clean": "turbo run clean",
+    "lint": "npx @biomejs/biome check .",
+    "format": "npx @biomejs/biome format .",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "tsup": "^8.0.2",
+    "turbo": "^1.13.4",
+    "typescript": "^5.3.3"
+  }
+}
