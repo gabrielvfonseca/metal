@@ -1,0 +1,11 @@
+{
+  "name": "@metal/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "base.js",
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "eslint": "^8.56.0"
+  }
+}

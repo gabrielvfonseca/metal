@@ -1,0 +1,26 @@
+{
+  "name": "@metal/cli",
+  "version": "0.1.0",
+  "description": "CLI for Metal - AI-powered context switching tool",
+  "main": "dist/index.js",
+  "private": true,
+  "bin": {
+    "metal": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "npx tsup src/index.ts --format cjs --dts --clean --minify --sourcemap",
+    "dev": "npx tsup src/index.ts --format cjs --dts --clean --watch",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "postbuild": "node ./scripts/add-shebang.js"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.2"
+  }
+}
