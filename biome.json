@@ -1,0 +1,110 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100
+  },
+  "organizeImports": { "enabled": true },
+  "files": {
+    "include": [
+      "src/**/*",
+      "test/**/*",
+      "scripts/**/*",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json",
+      "**/*.css"
+    ],
+    "ignore": [
+      "node_modules",
+      "dist",
+      "build",
+      "public",
+      "public/**",
+      "public/**/**"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUndeclaredDependencies": "off",
+        "useImportExtensions": "off",
+        "noNodejsModules": "off",
+        "useExhaustiveDependencies": "off"
+      },
+      "style": {
+        "useNodejsImportProtocol": "off",
+        "useNamingConvention": {
+          "level": "off"
+        }
+      },
+      "suspicious": {
+        "noConsole": "off",
+        "noArrayIndexKey": "off",
+        "noExplicitAny": "off"
+      },
+      "nursery": {
+        "useSortedClasses": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      },
+      "a11y": {
+        "useFocusableInteractive": "off",
+        "useSemanticElements": "off",
+        "noRedundantRoles": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "semicolons": "always"
+    }
+  },
+  "css": {
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineEnding": "lf",
+      "lineWidth": 80,
+      "quoteStyle": "double"
+    },
+    "parser": {
+      "allowWrongLineComments": false,
+      "cssModules": false
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineEnding": "lf",
+      "lineWidth": 80,
+      "trailingCommas": "none"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "parser": {
+      "allowComments": false,
+      "allowTrailingCommas": false
+    }
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  }
+}
