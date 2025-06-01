@@ -1,0 +1,84 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Project Structure Standards
+
+## Directory Organization
+```
+metal/
+├── apps/                    # Application packages
+│   ├── cli/                # CLI application
+│   └── daemon/             # Daemon application
+├── packages/               # Shared packages
+│   ├── core/              # Core functionality
+│   └── types/             # Shared types
+├── tools/                 # Development tools
+│   ├── eslint-config/     # ESLint configuration
+│   └── tsconfig/         # TypeScript configuration
+└── docs/                 # Documentation
+```
+
+## Package Organization
+- Keep related files together
+- Use index.ts for public exports
+- Separate types into dedicated files
+- Group utilities by functionality
+
+## File Naming
+- Use kebab-case for file names
+- Use .ts extension for TypeScript files
+- Use .test.ts for test files
+- Use .d.ts for type declaration files
+
+## Import Structure
+```typescript
+// External dependencies
+import { z } from 'zod';
+import { Command } from 'commander';
+
+// Internal packages
+import { StateManager } from '@metal/core';
+import { WorkState } from '@metal/types';
+
+// Local imports
+import { config } from './config';
+import { utils } from './utils';
+```
+
+## Module Exports
+- Use named exports for utilities
+- Use default exports for main components
+- Re-export from index.ts
+- Document public APIs
+
+## Examples
+
+```typescript
+// Good: Package structure
+// packages/core/src/index.ts
+export * from './state';
+export * from './config';
+export * from './types';
+
+// Good: Module organization
+// packages/core/src/state/index.ts
+export * from './state-manager';
+export * from './state-types';
+export * from './state-utils';
+
+// Good: File naming
+// packages/core/src/state/state-manager.ts
+// packages/core/src/state/state-types.ts
+// packages/core/src/state/state-utils.ts
+```
+
+## Best Practices
+- Keep files focused and single-purpose
+- Use consistent file organization
+- Document directory structure
+- Follow monorepo best practices
+- Use workspace references
+- Maintain clear package boundaries
+- Keep circular dependencies in check

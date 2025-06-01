@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# TypeScript Standards
+
+## General Rules
+- Use strict TypeScript configuration
+- Prefer explicit types over type inference when it improves readability
+- Use interfaces for public APIs and types for internal structures
+- Document complex types with JSDoc comments
+
+## Naming Conventions
+- Use PascalCase for types, interfaces, and classes
+- Use camelCase for variables, functions, and methods
+- Use UPPER_SNAKE_CASE for constants
+- Prefix interfaces with 'I' only when necessary to avoid naming conflicts
+
+## Type Definitions
+- Use zod for runtime type validation
+- Export types generated from zod schemas
+- Use discriminated unions for state management
+- Prefer readonly properties when possible
+
+## Error Handling
+- Use custom error classes extending Error
+- Include error codes and context in error messages
+- Use Result type pattern for operations that can fail
+
+## Async Code
+- Use async/await over raw promises
+- Handle promise rejections appropriately
+- Use try/catch blocks for error handling
+- Document async functions with return types
+
+## Imports
+- Use named imports over default imports
+- Group imports by type (external, internal, types)
+- Use type imports for type-only imports
+
+## Examples
+
+```typescript
+// Good: Explicit interface with documentation
+interface IStateManager {
+  /** Captures the current work state */
+  captureState(): Promise<WorkState>;
+  /** Restores a previously captured state */
+  restoreState(stateId: string): Promise<WorkState>;
+}
+
+// Good: Zod schema with exported type
+const WorkStateSchema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  data: z.record(z.unknown())
+});
+export type WorkState = z.infer<typeof WorkStateSchema>;
+
+// Good: Custom error class
+class StateError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly context?: unknown
+  ) {
+    super(message);
+    this.name = 'StateError';
+  }
+}
