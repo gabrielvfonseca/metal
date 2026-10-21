@@ -1,6 +1,7 @@
 // seed.ts - Seed the social graph database
-import { createNeo4jDriver } from '@metal/neo4j-driver';
+
 import { MetalClient } from '@metal/core';
+import { createNeo4jDriver } from '@metal/neo4j-driver';
 import { graph } from './schema.js';
 
 const URI = process.env.NEO4J_URI || 'bolt://localhost:7687';
@@ -41,10 +42,20 @@ async function seed() {
 
   // Create posts
   const post1 = await client.create('Post', {
-    data: { id: 'post-1', title: 'Graph Databases 101', content: 'Intro to graphs', published: true },
+    data: {
+      id: 'post-1',
+      title: 'Graph Databases 101',
+      content: 'Intro to graphs',
+      published: true,
+    },
   });
   const post2 = await client.create('Post', {
-    data: { id: 'post-2', title: 'Cypher Query Tips', content: 'Optimize your queries', published: true },
+    data: {
+      id: 'post-2',
+      title: 'Cypher Query Tips',
+      content: 'Optimize your queries',
+      published: true,
+    },
   });
   const post3 = await client.create('Post', {
     data: { id: 'post-3', title: 'Draft Post', content: 'Not yet published', published: false },

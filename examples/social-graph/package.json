@@ -5,14 +5,19 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "generate": "metal generate",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo"
   },
   "dependencies": {
     "@metal/core": "workspace:*",
     "@metal/neo4j-driver": "workspace:*",
-    "@metal/zod": "workspace:*"
+    "@metal/zod": "workspace:*",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@metal/cli": "workspace:*",
     "tsx": "^4.0.0",
     "typescript": "^5.3.0",
     "@types/node": "^20.0.0"

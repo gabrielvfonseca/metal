@@ -1,0 +1,24 @@
+# Codeowners
+
+/root config files
+/package.json       @gabrielvfonseca
+/pnpm-lock.yaml     @gabrielvfonseca
+/pnpm-workspace.yaml @gabrielvfonseca
+/tsconfig.base.json @gabrielvfonseca
+/turbo.json         @gabrielvfonseca
+/biome.json         @gabrielvfonseca
+/.github/**         @gabrielvfonseca
+
+# Packages
+/packages/core/     @gabrielvfonseca
+/packages/neo4j-driver/ @gabrielvfonseca
+/packages/zod/      @gabrielvfonseca
+
+# CLI
+/cli/               @gabrielvfonseca
+
+# Examples
+/examples/          @gabrielvfonseca
+
+# Documentation
+/docs/              @gabrielvfonseca

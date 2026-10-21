@@ -1,9 +1,9 @@
 // @metal/zod/tests/validation.test.ts
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  toZodSchema,
   toCreateSchema,
   toUpdateSchema,
+  toZodSchema,
   validateCreate,
   validateUpdate,
   validationHooks,
@@ -39,7 +39,7 @@ describe('toZodSchema', () => {
       email: 'alice@test.com',
       age: 30,
       score: 100,
-    });
+    }) as { id: string; name: string; email: string; age: number | null };
 
     expect(result.id).toBe('abc-123');
     expect(result.name).toBe('Alice');
@@ -59,9 +59,48 @@ describe('toZodSchema', () => {
       name: 'Alice',
       email: 'alice@test.com',
       age: null,
-    });
+    }) as { age: number | null };
 
     expect(result.age).toBeNull();
+  });
+
+  it('treats array + nullable as T[] | null (not (T|null)[])', () => {
+    const config = {
+      label: 'Post' as const,
+      properties: {
+        id: { type: 'string' as const, primary: true },
+        tags: { type: 'string' as const, array: true, nullable: true },
+      },
+      relations: {},
+    };
+    const schema = toZodSchema(config);
+
+    const arr = schema.parse({ id: '1', tags: ['a', 'b'] }) as { tags: string[] | null };
+    expect(arr.tags).toEqual(['a', 'b']);
+
+    const nul = schema.parse({ id: '1', tags: null }) as { tags: string[] | null };
+    expect(nul.tags).toBeNull();
+
+    expect(() => schema.parse({ id: '1', tags: [1, 2] })).toThrow();
+  });
+
+  it('maps uuid and json property types', () => {
+    const config = {
+      label: 'Token' as const,
+      properties: {
+        id: { type: 'uuid' as const, primary: true },
+        payload: { type: 'json' as const },
+      },
+      relations: {},
+    };
+    const schema = toZodSchema(config);
+    expect(() => schema.parse({ id: 'not-a-uuid', payload: {} })).toThrow();
+    expect(schema.parse({ id: '550e8400-e29b-41d4-a716-446655440000', payload: { a: 1 } })).toEqual(
+      {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        payload: { a: 1 },
+      },
+    );
   });
 });
 
@@ -72,7 +111,7 @@ describe('toCreateSchema', () => {
       id: 'abc',
       name: 'Alice',
       email: 'alice@test.com',
-    });
+    }) as { id: string; name: string; score: number };
 
     expect(result.id).toBe('abc');
     expect(result.name).toBe('Alice');
@@ -85,7 +124,7 @@ describe('toCreateSchema', () => {
       id: 'abc',
       name: 'Alice',
       email: 'alice@test.com',
-    });
+    }) as { age?: number | null };
 
     expect(result.age).toBeUndefined();
   });

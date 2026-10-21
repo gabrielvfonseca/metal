@@ -3,24 +3,21 @@
 
 import { QueryCompiler } from '../query';
 import type {
-  NodeConfig,
-  RelationConfig,
-  WhereCondition,
-  IncludeInput,
-  CreateInput,
-  UpdateInput,
+  CreateOptions,
+  DeleteOptions,
+  DriverAdapter,
   FindManyOptions,
   FindUniqueOptions,
-  CreateOptions,
-  UpdateOptions,
-  DeleteOptions,
-  UpsertOptions,
-  MetalClientConfig,
-  DriverAdapter,
-  QueryResult,
-  TransactionContext,
+  IncludeInput,
   MetalConfig,
-  MetalDriverConfig,
+  NodeConfig,
+  NoInferShim,
+  QueryResult,
+  RelationConfig,
+  TransactionContext,
+  UpdateOptions,
+  UpsertOptions,
+  WhereCondition,
 } from '../types';
 
 export class MetalClient {
@@ -28,10 +25,7 @@ export class MetalClient {
   private compiler: QueryCompiler;
   private schemaNodes: Map<string, NodeConfig<any, any>>;
 
-  constructor(
-    driver: DriverAdapter,
-    schemaNodes?: Record<string, NodeConfig<any, any>>
-  ) {
+  constructor(driver: DriverAdapter, schemaNodes?: Record<string, NodeConfig<any, any>>) {
     this.driver = driver;
     this.compiler = new QueryCompiler();
     this.schemaNodes = new Map();
@@ -55,11 +49,10 @@ export class MetalClient {
   static fromConfig(
     driverOrFactory: DriverAdapter | ((config?: any) => DriverAdapter),
     config?: Partial<MetalConfig>,
-    schemaNodes?: Record<string, NodeConfig<any, any>>
+    schemaNodes?: Record<string, NodeConfig<any, any>>,
   ): MetalClient {
-    const driver = typeof driverOrFactory === 'function'
-      ? driverOrFactory(config?.driver)
-      : driverOrFactory;
+    const driver =
+      typeof driverOrFactory === 'function' ? driverOrFactory(config?.driver) : driverOrFactory;
     return new MetalClient(driver, schemaNodes);
   }
 
@@ -86,7 +79,7 @@ export class MetalClient {
     if (!config) {
       throw new Error(
         `Node "${label}" is not registered in the schema. ` +
-        `Did you forget to call registerNode() or pass schemaNodes to the constructor?`
+          `Did you forget to call registerNode() or pass schemaNodes to the constructor?`,
       );
     }
     return config;
@@ -94,7 +87,7 @@ export class MetalClient {
 
   async findMany<T extends Record<string, unknown>>(
     label: string,
-    options: FindManyOptions<T> = {}
+    options: FindManyOptions<T> = {},
   ): Promise<T[]> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileFindMany(label, options);
@@ -111,7 +104,7 @@ export class MetalClient {
 
   async findUnique<T extends Record<string, unknown>>(
     label: string,
-    options: FindUniqueOptions<T>
+    options: FindUniqueOptions<T>,
   ): Promise<T | null> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileFindUnique(label as string, options.where, nodeConfig);
@@ -132,11 +125,16 @@ export class MetalClient {
 
   async create<T extends Record<string, unknown>>(
     label: string,
-    options: CreateOptions<T>
+    options: CreateOptions<T>,
   ): Promise<T> {
     const nodeConfig = this.getNodeConfig(label);
     const query = options.relations
-      ? this.compiler.compileCreateAndConnect(label as string, options.data, options.relations, nodeConfig)
+      ? this.compiler.compileCreateAndConnect(
+          label as string,
+          options.data,
+          options.relations,
+          nodeConfig,
+        )
       : this.compiler.compileCreate(label as string, options.data, nodeConfig);
 
     const result = await this.driver.runQuery(query.cypher, query.params);
@@ -147,10 +145,15 @@ export class MetalClient {
 
   async update<T extends Record<string, unknown>>(
     label: string,
-    options: UpdateOptions<T>
+    options: UpdateOptions<T>,
   ): Promise<T> {
     const nodeConfig = this.getNodeConfig(label);
-    const query = this.compiler.compileUpdate(label as string, options.where, options.data, nodeConfig);
+    const query = this.compiler.compileUpdate(
+      label as string,
+      options.where,
+      options.data,
+      nodeConfig,
+    );
     const result = await this.driver.runQuery(query.cypher, query.params);
 
     if (result.records.length === 0) {
@@ -163,7 +166,7 @@ export class MetalClient {
 
   async delete<T extends Record<string, unknown>>(
     label: string,
-    options: DeleteOptions<T>
+    options: DeleteOptions<T>,
   ): Promise<void> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileDelete(label as string, options.where, nodeConfig);
@@ -172,7 +175,7 @@ export class MetalClient {
 
   async upsert<T extends Record<string, unknown>>(
     label: string,
-    options: UpsertOptions<T>
+    options: UpsertOptions<T>,
   ): Promise<T> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileUpsert(
@@ -180,17 +183,14 @@ export class MetalClient {
       options.where,
       options.create,
       options.update,
-      nodeConfig
+      nodeConfig,
     );
     const result = await this.driver.runQuery(query.cypher, query.params);
     const record = result.records[0]!;
     return this.toObject<T>(record);
   }
 
-  async count(
-    label: string,
-    where?: WhereCondition<Record<string, unknown>>
-  ): Promise<number> {
+  async count(label: string, where?: WhereCondition<Record<string, unknown>>): Promise<number> {
     const query = this.compiler.compileAggregate(label, 'count', undefined, where);
     const result = await this.driver.runQuery(query.cypher, query.params);
 
@@ -204,7 +204,7 @@ export class MetalClient {
     label: string,
     aggregation: 'count' | 'sum' | 'avg' | 'min' | 'max',
     field?: string,
-    where?: WhereCondition<Record<string, unknown>>
+    where?: WhereCondition<Record<string, unknown>>,
   ): Promise<number> {
     const query = this.compiler.compileAggregate(label, aggregation, field, where);
     const result = await this.driver.runQuery(query.cypher, query.params);
@@ -221,7 +221,7 @@ export class MetalClient {
     relationType: string,
     toLabel: string,
     toId: string,
-    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT'
+    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT',
   ): Promise<void> {
     const query = this.compiler.compileCreateRelation(fromId, relationType, toId, direction);
     await this.driver.runQuery(query.cypher, query.params);
@@ -233,7 +233,7 @@ export class MetalClient {
     relationType: string,
     toLabel: string,
     toId: string,
-    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT'
+    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT',
   ): Promise<void> {
     const query = this.compiler.compileDeleteRelation(fromId, relationType, toId, direction);
     await this.driver.runQuery(query.cypher, query.params);
@@ -241,16 +241,14 @@ export class MetalClient {
 
   async raw<T = Record<string, unknown>>(
     cypher: string,
-    params?: Record<string, unknown>
+    params?: Record<string, unknown>,
   ): Promise<T[]> {
     const query = this.compiler.compileRaw(cypher, params);
     const result = await this.driver.runQuery(query.cypher, query.params);
     return result.records.map((record) => this.toObject<T>(record));
   }
 
-  async transaction<T>(
-    work: (tx: MetalTransaction) => Promise<T>
-  ): Promise<T> {
+  async transaction<T>(work: (tx: MetalTransaction) => Promise<T>): Promise<T> {
     return await this.driver.runInTransaction(async (txc: TransactionContext) => {
       const tx = new MetalTransaction(this.compiler, txc, this.schemaNodes);
       return await work(tx);
@@ -268,7 +266,7 @@ export class MetalClient {
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
       limit?: number;
-    }
+    },
   ): Promise<Record<string, unknown>[]> {
     const query = this.compiler.compilePath(fromLabel, relationType, toLabel, options);
     const result = await this.driver.runQuery(query.cypher, query.params);
@@ -286,7 +284,7 @@ export class MetalClient {
       toWhere?: Record<string, unknown>;
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
-    }
+    },
   ): Promise<{ nodes: Record<string, unknown>[]; path: unknown } | null> {
     const query = this.compiler.compileShortestPath(fromLabel, relationType, toLabel, options);
     const result = await this.driver.runQuery(query.cypher, query.params);
@@ -309,7 +307,7 @@ export class MetalClient {
       toWhere?: Record<string, unknown>;
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
-    }
+    },
   ): Promise<{ nodes: Record<string, unknown>[]; path: unknown }[]> {
     const query = this.compiler.compileAllShortestPaths(fromLabel, relationType, toLabel, options);
     const result = await this.driver.runQuery(query.cypher, query.params);
@@ -322,7 +320,7 @@ export class MetalClient {
   private async hydrateRelations<T extends Record<string, unknown>>(
     items: T[],
     include: IncludeInput<Record<string, any>>,
-    nodeConfig: NodeConfig<any, any>
+    nodeConfig: NodeConfig<any, any>,
   ): Promise<T[]> {
     for (const [relName, includeConfig] of Object.entries(include)) {
       if (!includeConfig) continue;
@@ -330,56 +328,69 @@ export class MetalClient {
       const relConfig = nodeConfig.relations[relName] as RelationConfig<string, string> | undefined;
       if (!relConfig) continue;
 
-      for (const item of items) {
-        const itemId = (item as Record<string, unknown>)['id'];
-        if (!itemId) continue;
+      const ids = items
+        .map((item) => (item as Record<string, unknown>)['id'])
+        .filter((id) => id !== undefined && id !== null)
+        .map(String);
+      if (ids.length === 0) continue;
 
-        const targetAlias = relConfig.direction === 'IN' ? 'a' : 'b';
-        const fromAlias = relConfig.direction === 'IN' ? 'b' : 'a';
+      const fromAlias = 'a';
+      const targetAlias = 'b';
+      const targetPattern = `(${targetAlias}:${relConfig.target})`;
+      let pattern: string;
+      if (relConfig.direction === 'IN') {
+        pattern = `(${fromAlias}:${nodeConfig.label} {id: sourceId})<-[r:${relConfig.type}]-${targetPattern}`;
+      } else if (relConfig.direction === 'BOTH') {
+        pattern = `(${fromAlias}:${nodeConfig.label} {id: sourceId})-[r:${relConfig.type}]-${targetPattern}`;
+      } else {
+        pattern = `(${fromAlias}:${nodeConfig.label} {id: sourceId})-[r:${relConfig.type}]->${targetPattern}`;
+      }
 
-        let cypher: string;
-        if (relConfig.direction === 'OUT') {
-          cypher = `MATCH (${fromAlias}:${nodeConfig.label} {id: $id})-[r:${relConfig.type}]->(${targetAlias}:${relConfig.target}) RETURN ${targetAlias}`;
-        } else if (relConfig.direction === 'IN') {
-          cypher = `MATCH (${fromAlias}:${nodeConfig.label} {id: $id})<-[r:${relConfig.type}]-(${targetAlias}:${relConfig.target}) RETURN ${targetAlias}`;
-        } else {
-          cypher = `MATCH (${fromAlias}:${nodeConfig.label} {id: $id})-[r:${relConfig.type}]-(${targetAlias}:${relConfig.target}) RETURN ${targetAlias}`;
+      const cypher = `UNWIND $ids AS sourceId\nMATCH ${pattern}\nRETURN sourceId, ${targetAlias}`;
+      const result = await this.driver.runQuery(cypher, { ids });
+
+      const grouped = new Map<string, Record<string, unknown>[]>();
+      for (const record of result.records) {
+        const sourceId = String(record.get('sourceId'));
+        const target = this.toObject<Record<string, unknown>>(record.get(targetAlias));
+        let bucket = grouped.get(sourceId);
+        if (!bucket) {
+          bucket = [];
+          grouped.set(sourceId, bucket);
         }
+        bucket.push(target);
+      }
 
-        const result = await this.driver.runQuery(cypher, { id: String(itemId) });
+      let allTargets: Record<string, unknown>[] = [];
+      for (const bucket of grouped.values()) {
+        allTargets.push(...bucket);
+      }
 
-        if (includeConfig === true || typeof includeConfig !== 'object') {
-          if (relConfig.multiple) {
-            (item as Record<string, unknown>)[String(relName)] = result.records.map((r) =>
-              this.toObject(r)
-            );
-          } else {
-            (item as Record<string, unknown>)[String(relName)] =
-              result.records.length > 0 ? this.toObject(result.records[0]!) : null;
-          }
-        } else if (typeof includeConfig === 'object') {
-          const hydratedItems: Record<string, unknown>[] = result.records.map((r: any) => this.toObject(r));
-          const targetNodeConfig = this.schemaNodes.get(relConfig.target);
-          if (targetNodeConfig) {
-            const deeplyHydrated = await this.hydrateRelations(
-              hydratedItems,
-              includeConfig as IncludeInput<Record<string, any>>,
-              targetNodeConfig
-            );
-            if (relConfig.multiple) {
-              (item as Record<string, unknown>)[String(relName)] = deeplyHydrated;
-            } else {
-              (item as Record<string, unknown>)[String(relName)] =
-                deeplyHydrated.length > 0 ? deeplyHydrated[0] : null;
-            }
-          } else {
-            if (relConfig.multiple) {
-              (item as Record<string, unknown>)[String(relName)] = hydratedItems;
-            } else {
-              (item as Record<string, unknown>)[String(relName)] =
-                hydratedItems.length > 0 ? hydratedItems[0] : null;
-            }
-          }
+      if (typeof includeConfig === 'object') {
+        const targetNodeConfig = this.schemaNodes.get(relConfig.target);
+        if (targetNodeConfig && allTargets.length > 0) {
+          allTargets = await this.hydrateRelations(
+            allTargets,
+            includeConfig as IncludeInput<Record<string, any>>,
+            targetNodeConfig,
+          );
+          // Re-link hydrated objects back into their buckets by id
+        }
+      }
+
+      for (const item of items) {
+        const itemId = String((item as Record<string, unknown>)['id'] ?? '');
+        const targets = grouped.get(itemId) ?? [];
+
+        if (typeof includeConfig === 'object') {
+          // buckets hold references that hydrateRelations mutated in place
+          const rel = relConfig.multiple ? targets : targets.length > 0 ? targets[0]! : null;
+          (item as Record<string, unknown>)[String(relName)] = rel;
+        } else if (relConfig.multiple) {
+          (item as Record<string, unknown>)[String(relName)] = targets;
+        } else {
+          (item as Record<string, unknown>)[String(relName)] =
+            targets.length > 0 ? targets[0]! : null;
         }
       }
     }
@@ -387,8 +398,14 @@ export class MetalClient {
     return items;
   }
 
-  private toObject<T>(record: any): T {
-    const obj = typeof record.toObject === 'function' ? record.toObject() : record;
+  private toObject<T>(record: unknown): T {
+    if (record === null || typeof record !== 'object') {
+      return record as T;
+    }
+    const obj =
+      typeof (record as { toObject?: unknown }).toObject === 'function'
+        ? (record as { toObject(): Record<string, unknown> }).toObject()
+        : (record as Record<string, unknown>);
     const result: Record<string, unknown> = {};
 
     for (const key of Object.keys(obj)) {
@@ -407,7 +424,7 @@ export class MetalTransaction {
   constructor(
     compiler: QueryCompiler,
     txc: TransactionContext,
-    schemaNodes: Map<string, NodeConfig<any, any>>
+    schemaNodes: Map<string, NodeConfig<any, any>>,
   ) {
     this.compiler = compiler;
     this.txc = txc;
@@ -418,19 +435,27 @@ export class MetalTransaction {
     return await this.txc.run(cypher, params);
   }
 
+  private toObject<T>(record: any): T {
+    const obj = typeof record?.toObject === 'function' ? record.toObject() : record;
+    if (!obj || typeof obj !== 'object') return obj as T;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = parseNeo4jValue(obj[key]);
+    }
+    return result as T;
+  }
+
   getNodeConfig(label: string): NodeConfig<any, any> {
     const config = this.schemaNodes.get(label);
     if (!config) {
-      throw new Error(
-        `Node "${label}" is not registered in the schema.`
-      );
+      throw new Error(`Node "${label}" is not registered in the schema.`);
     }
     return config;
   }
 
   async findOne<T extends Record<string, unknown>>(
     label: string,
-    where: WhereCondition<T> & { id?: string }
+    where: NoInferShim<WhereCondition<T> & { id?: string }>,
   ): Promise<T | null> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileFindUnique(label, where, nodeConfig);
@@ -438,21 +463,21 @@ export class MetalTransaction {
 
     const result = await this.runQuery(query.cypher, query.params);
     if (result.records.length === 0) return null;
-    return result.records[0]!.toObject() as T;
+    return this.toObject<T>(result.records[0]);
   }
 
   async findMany<T extends Record<string, unknown>>(
     label: string,
-    options: FindManyOptions<T> = {}
+    options: FindManyOptions<T> = {},
   ): Promise<T[]> {
     const query = this.compiler.compileFindMany(label, options);
     const result = await this.runQuery(query.cypher, query.params);
-    return result.records.map((r) => r.toObject() as T);
+    return result.records.map((r) => this.toObject<T>(r));
   }
 
   async create<T extends Record<string, unknown>>(
     label: string,
-    options: CreateOptions<T>
+    options: CreateOptions<T>,
   ): Promise<T> {
     const nodeConfig = this.getNodeConfig(label);
     const query = options.relations
@@ -460,23 +485,23 @@ export class MetalTransaction {
       : this.compiler.compileCreate(label, options.data, nodeConfig);
     const result = await this.runQuery(query.cypher, query.params);
     if (result.records.length === 0) throw new Error(`Failed to create ${label}`);
-    return result.records[0]!.toObject() as T;
+    return this.toObject<T>(result.records[0]);
   }
 
   async update<T extends Record<string, unknown>>(
     label: string,
-    options: UpdateOptions<T>
+    options: UpdateOptions<T>,
   ): Promise<T> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileUpdate(label, options.where, options.data, nodeConfig);
     const result = await this.runQuery(query.cypher, query.params);
     if (result.records.length === 0) throw new Error(`Failed to update ${label}: record not found`);
-    return result.records[0]!.toObject() as T;
+    return this.toObject<T>(result.records[0]);
   }
 
   async delete<T extends Record<string, unknown>>(
     label: string,
-    options: DeleteOptions<T>
+    options: DeleteOptions<T>,
   ): Promise<void> {
     const nodeConfig = this.getNodeConfig(label);
     const query = this.compiler.compileDelete(label, options.where, nodeConfig);
@@ -485,11 +510,11 @@ export class MetalTransaction {
 
   async raw<T = Record<string, unknown>>(
     cypher: string,
-    params?: Record<string, unknown>
+    params?: Record<string, unknown>,
   ): Promise<T[]> {
     const query = this.compiler.compileRaw(cypher, params);
     const result = await this.runQuery(query.cypher, query.params);
-    return result.records.map((r) => r.toObject() as T);
+    return result.records.map((r) => this.toObject<T>(r));
   }
 
   async traverse(
@@ -503,37 +528,58 @@ export class MetalTransaction {
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
       limit?: number;
-    }
+    },
   ): Promise<Record<string, unknown>[]> {
     const query = this.compiler.compilePath(fromLabel, relationType, toLabel, options);
     const result = await this.runQuery(query.cypher, query.params);
-    return result.records.map((record) => record.toObject());
+    return result.records.map((record) => this.toObject<Record<string, unknown>>(record));
   }
+}
+
+interface Neo4jLikeInteger {
+  low: number;
+  high: number;
+  toNumber?: () => number;
+}
+
+interface Neo4jLikeTemporal {
+  toDate?: () => Date;
+  toString(): string;
+}
+
+function isNeo4jInteger(value: object): value is Neo4jLikeInteger {
+  const v = value as Record<string, unknown>;
+  return typeof v['low'] === 'number' && typeof v['high'] === 'number';
 }
 
 function parseNeo4jValue(value: unknown): unknown {
   if (value === null || value === undefined) return value;
 
-  if (typeof value === 'object' && value !== null) {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(parseNeo4jValue);
+  }
+
+  if (typeof value === 'object') {
     const v = value as Record<string, unknown>;
-    if ('low' in v && 'high' in v && 'toNumber' in v) {
-      return neo4jIntegerToNumber(v);
+
+    if (isNeo4jInteger(value)) {
+      return neo4jIntegerToNumber(value);
     }
-    if (value instanceof Date) {
-      return value;
-    }
-    if (typeof (value as any).toDate === 'function') {
+
+    if (typeof v['toDate'] === 'function') {
       try {
-        return new Date((value as any).toString());
+        return new Date(String(value));
       } catch {
-        return (value as any).toString();
+        return String(value);
       }
     }
-    if (typeof (value as any).toNumber === 'function') {
-      return (value as any).toNumber();
-    }
-    if (Array.isArray(value)) {
-      return (value as unknown[]).map(parseNeo4jValue);
+
+    if (typeof v['toNumber'] === 'function') {
+      return (v['toNumber'] as () => number)();
     }
   }
 
@@ -543,12 +589,12 @@ function parseNeo4jValue(value: unknown): unknown {
 function neo4jIntegerToNumber(value: unknown): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
-  if (typeof value === 'object' && value !== null) {
-    const v = value as any;
-    if (typeof v.toNumber === 'function') return v.toNumber() as number;
+  if (typeof value === 'object') {
+    const v = value as Neo4jLikeInteger & Partial<Neo4jLikeTemporal>;
+    if (typeof v.toNumber === 'function') return v.toNumber();
     if (typeof v.low === 'number') return v.low;
   }
   return Number(value);
 }
 
-export { parseNeo4jValue, neo4jIntegerToNumber };
+export { neo4jIntegerToNumber, parseNeo4jValue };

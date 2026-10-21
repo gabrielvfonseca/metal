@@ -23,16 +23,23 @@ export interface PropertyConfig<T extends PropertyType = PropertyType> {
   array?: boolean;
 }
 
-export type PropertyTypeToJSType<T extends PropertyType> =
-  T extends 'string' ? string
-  : T extends 'number' ? number
-  : T extends 'boolean' ? boolean
-  : T extends 'date' ? Date
-  : T extends 'bigint' ? bigint
-  : T extends 'float' ? number
-  : T extends 'uuid' ? string
-  : T extends 'json' ? unknown
-  : never;
+export type PropertyTypeToJSType<T extends PropertyType> = T extends 'string'
+  ? string
+  : T extends 'number'
+    ? number
+    : T extends 'boolean'
+      ? boolean
+      : T extends 'date'
+        ? Date
+        : T extends 'bigint'
+          ? bigint
+          : T extends 'float'
+            ? number
+            : T extends 'uuid'
+              ? string
+              : T extends 'json'
+                ? unknown
+                : never;
 
 export interface NodeConfig<TName extends string, TProps extends Record<string, PropertyConfig>> {
   label: TName;
@@ -42,7 +49,7 @@ export interface NodeConfig<TName extends string, TProps extends Record<string, 
   constraints?: Array<{ fields: Array<keyof TProps>; type: 'UNIQUE' | 'EXISTS' }>;
 }
 
-export interface RelationConfig<TFrom extends string, TTo extends string> {
+export interface RelationConfig<_TFrom extends string, TTo extends string> {
   type: string;
   direction: RelationDirection;
   target: TTo;
@@ -78,47 +85,35 @@ export type InferNodeRelations<TConfig extends NodeConfig<any, any>> = {
     : InferNode<TConfig['relations'][K]['target']> | null;
 };
 
-export type InferNode<TName extends string> = TName extends 'User'
-  ? UserNode
-  : TName extends 'Post'
-  ? PostNode
-  : TName extends 'Comment'
-  ? CommentNode
+/**
+ * A registry of node names to their NodeConfig maps, as returned by `schema().build()`.
+ */
+export type MetalSchemaRegistry = Record<string, NodeConfig<any, any>>;
+
+/**
+ * Resolve a node's inferred shape by label against a schema registry.
+ * Falls back to a generic record for unknown labels.
+ *
+ * @example
+ * ```ts
+ * type User = InferNode<'User', typeof graph>;
+ * ```
+ */
+export type InferNode<
+  TName extends string = string,
+  TRegistry extends MetalSchemaRegistry = MetalSchemaRegistry,
+> = TName extends keyof TRegistry
+  ? InferNodeProperties<TRegistry[TName]> & InferNodeRelations<TRegistry[TName]>
   : Record<string, unknown>;
 
-export interface UserNode {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PostNode {
-  id: string;
-  title: string;
-  content: string;
-  published: boolean;
-  authorId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CommentNode {
-  id: string;
-  content: string;
-  postId: string;
-  authorId: string;
-  createdAt: Date;
-}
-
-export type InferRelationProperties<TConfig extends RelationConfig<any, any>> = TConfig['properties'] extends Record<string, PropertyConfig>
-  ? {
-      [K in keyof TConfig['properties']]: TConfig['properties'][K]['nullable'] extends true
-        ? PropertyTypeToJSType<TConfig['properties'][K]['type']> | null
-        : PropertyTypeToJSType<TConfig['properties'][K]['type']>;
-    }
-  : Record<string, unknown>;
+export type InferRelationProperties<TConfig extends RelationConfig<any, any>> =
+  TConfig['properties'] extends Record<string, PropertyConfig>
+    ? {
+        [K in keyof TConfig['properties']]: TConfig['properties'][K]['nullable'] extends true
+          ? PropertyTypeToJSType<TConfig['properties'][K]['type']> | null
+          : PropertyTypeToJSType<TConfig['properties'][K]['type']>;
+      }
+    : Record<string, unknown>;
 
 // Type-level utilities for query building
 export type WhereOperator<T> =
@@ -180,8 +175,15 @@ export type RelationWhereInput<T> = WhereCondition<T> & {
 };
 
 // Client-level options types
+
+/**
+ * Blocks TypeScript from inferring `T` through a position — keeps `where`
+ * clauses from producing bogus type inference on generic client methods.
+ */
+export type NoInferShim<T> = [T][T extends unknown ? 0 : never];
+
 export interface FindManyOptions<T extends Record<string, unknown>> {
-  where?: WhereCondition<T>;
+  where?: NoInferShim<WhereCondition<T>>;
   orderBy?: OrderByInput<T>;
   limit?: number;
   skip?: number;
@@ -190,31 +192,34 @@ export interface FindManyOptions<T extends Record<string, unknown>> {
 }
 
 export interface FindUniqueOptions<T extends Record<string, unknown>> {
-  where: WhereCondition<T> & { id?: string };
+  where: NoInferShim<WhereCondition<T> & { id?: string }>;
   include?: IncludeInput<Record<string, any>>;
 }
 
 export interface CreateOptions<T extends Record<string, unknown>> {
   data: CreateInput<T>;
-  relations?: Record<string, {
-    connect?: { where: Record<string, unknown> | { id: string } };
-    create?: CreateInput<Record<string, unknown>>;
-  }>;
+  relations?: Record<
+    string,
+    {
+      connect?: { where: Record<string, unknown> } | { id: string };
+      create?: CreateInput<Record<string, unknown>>;
+    }
+  >;
 }
 
 export interface UpdateOptions<T extends Record<string, unknown>> {
-  where: WhereCondition<T> & { id?: string };
-  data: UpdateInput<T>;
+  where: NoInferShim<WhereCondition<T> & { id?: string }>;
+  data: NoInferShim<UpdateInput<T>>;
 }
 
 export interface DeleteOptions<T extends Record<string, unknown>> {
-  where: WhereCondition<T> & { id?: string };
+  where: NoInferShim<WhereCondition<T> & { id?: string }>;
 }
 
 export interface UpsertOptions<T extends Record<string, unknown>> {
-  where: WhereCondition<T> & { id?: string };
-  create: CreateInput<T>;
-  update: UpdateInput<T>;
+  where: NoInferShim<WhereCondition<T> & { id?: string }>;
+  create: NoInferShim<CreateInput<T>>;
+  update: NoInferShim<UpdateInput<T>>;
 }
 
 export interface MetalClientConfig {

@@ -2,6 +2,27 @@
   "name": "@metal/zod",
   "version": "0.1.0",
   "description": "Zod validation integration for Metal OGM",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielvfonseca/metal.git",
+    "directory": "packages/zod"
+  },
+  "homepage": "https://github.com/gabrielvfonseca/metal/tree/master/packages/zod#readme",
+  "bugs": {
+    "url": "https://github.com/gabrielvfonseca/metal/issues"
+  },
+  "keywords": [
+    "zod",
+    "validation",
+    "ogm",
+    "neo4j",
+    "metal"
+  ],
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -10,18 +31,23 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
+    "clean": "rm -rf dist .turbo coverage",
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:ci": "vitest run --reporter=verbose",
-    "lint": "eslint src --ext .ts",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^3.22.0"
+  },
+  "peerDependencies": {
+    "@metal/core": "workspace:^"
   },
   "devDependencies": {
     "@metal/core": "workspace:*",

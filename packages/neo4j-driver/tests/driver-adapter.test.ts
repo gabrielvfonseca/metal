@@ -1,5 +1,5 @@
 // @metal/neo4j-driver/tests/driver-adapter.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Neo4jDriverAdapter } from '../src/index';
 
 vi.mock('neo4j-driver', () => {
@@ -122,10 +122,7 @@ describe('Neo4jDriverAdapter', () => {
 
     it('accepts parameters', async () => {
       await adapter.connect();
-      const result = await adapter.runQuery(
-        'MATCH (n:User {id: $id}) RETURN n',
-        { id: 'test-id' }
-      );
+      const result = await adapter.runQuery('MATCH (n:User {id: $id}) RETURN n', { id: 'test-id' });
 
       expect(result).toBeDefined();
     });
@@ -222,9 +219,9 @@ describe('Neo4jDriverAdapter', () => {
 
   describe('error handling', () => {
     it('throws descriptive error when running query without connection', async () => {
-      await expect(
-        adapter.runQuery('MATCH (n) RETURN n')
-      ).rejects.toThrow('Neo4j driver not connected');
+      await expect(adapter.runQuery('MATCH (n) RETURN n')).rejects.toThrow(
+        'Neo4j driver not connected',
+      );
     });
 
     it('throws descriptive error when getting driver without connection', () => {

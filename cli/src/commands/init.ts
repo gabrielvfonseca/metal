@@ -6,7 +6,7 @@ interface InitOptions {
   database: string;
 }
 
-export async function initCommand(directory: string, options: InitOptions): Promise<void> {
+export async function initCommand(directory: string, _options: InitOptions): Promise<void> {
   const targetDir = path.resolve(process.cwd(), directory);
 
   if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
@@ -22,14 +22,17 @@ export async function initCommand(directory: string, options: InitOptions): Prom
     private: true,
     type: 'module',
     scripts: {
-      build: 'metal generate',
+      generate: 'metal generate',
+      build: 'metal generate && tsc --noEmit',
       start: 'tsx src/index.ts',
+      typecheck: 'tsc --noEmit',
     },
     dependencies: {
       '@metal/core': 'latest',
       '@metal/neo4j-driver': 'latest',
     },
     devDependencies: {
+      '@metal/cli': 'latest',
       typescript: '^5.3.0',
       tsx: '^4.0.0',
       '@types/node': '^20.0.0',
@@ -38,7 +41,7 @@ export async function initCommand(directory: string, options: InitOptions): Prom
 
   fs.writeFileSync(
     path.join(targetDir, 'package.json'),
-    JSON.stringify(packageJson, null, 2) + '\n'
+    JSON.stringify(packageJson, null, 2) + '\n',
   );
 
   const tsconfig = {
@@ -54,10 +57,7 @@ export async function initCommand(directory: string, options: InitOptions): Prom
     include: ['src'],
   };
 
-  fs.writeFileSync(
-    path.join(targetDir, 'tsconfig.json'),
-    JSON.stringify(tsconfig, null, 2) + '\n'
-  );
+  fs.writeFileSync(path.join(targetDir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2) + '\n');
 
   fs.mkdirSync(path.join(targetDir, 'src'), { recursive: true });
 
@@ -79,17 +79,19 @@ export const graph = sch()
   fs.writeFileSync(path.join(targetDir, 'src', 'schema.ts'), schemaContent);
 
   const mainContent = `// src/index.ts
-import { MetalClient } from '@metal/core';
+import { MetalClient, env } from '@metal/core';
+import { createNeo4jDriver } from '@metal/neo4j-driver';
 import { graph } from './schema.js';
 
 async function main() {
-  const client = await MetalClient.connect({
-    uri: process.env.NEO4J_URI || 'bolt://localhost:7687',
-    username: process.env.NEO4J_USER || 'neo4j',
-    password: process.env.NEO4J_PASSWORD || 'password',
+  const driver = createNeo4jDriver({
+    uri: env.NEO4J_URI,
+    username: env.NEO4J_USER,
+    password: env.NEO4J_PASSWORD,
   });
+  await driver.connect();
 
-  client.registerNodes(graph);
+  const client = new MetalClient(driver, graph);
 
   const users = await client.findMany('User', { limit: 10 });
   console.log('Users:', users);
@@ -97,13 +99,16 @@ async function main() {
   await client.disconnect();
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
 `;
 
   fs.writeFileSync(path.join(targetDir, 'src', 'index.ts'), mainContent);
 
   // Generate metal.config.ts — the single source of truth for Metal
-  const metalConfigContent = `import { defineConfig } from '@metal/core';
+  const metalConfigContent = `import { defineConfig, env } from '@metal/core';
 
 export default defineConfig({
   schema: './src/schema.ts',
@@ -113,9 +118,9 @@ export default defineConfig({
   },
   driver: {
     type: 'neo4j',
-    uri: process.env.NEO4J_URI || 'bolt://localhost:7687',
-    username: process.env.NEO4J_USER || 'neo4j',
-    password: process.env.NEO4J_PASSWORD || 'password',
+    uri: env.NEO4J_URI,
+    username: env.NEO4J_USER,
+    password: env.NEO4J_PASSWORD,
   },
   debug: false,
 });
@@ -132,8 +137,9 @@ NEO4J_PASSWORD=password
   console.log(`\n✓ Initialized Metal project in "${targetDir}"`);
   console.log('\nNext steps:');
   console.log('  1. cd ' + directory);
-  console.log('  2. npm install');
-  console.log('  3. Set your Neo4j connection in .env');
+  console.log('  2. Install dependencies (pnpm install / npm install / yarn)');
+  console.log('  3. Copy .env.example to .env and set your Neo4j connection');
   console.log('  4. Edit src/schema.ts to define your graph');
-  console.log('  5. npx tsx src/index.ts\n');
+  console.log('  5. npx metal generate');
+  console.log('  6. npx tsx src/index.ts\n');
 }

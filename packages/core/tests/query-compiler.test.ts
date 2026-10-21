@@ -1,6 +1,7 @@
 // @metal/core/tests/query-compiler.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { QueryCompiler } from '../src/query/index';
+import type { WhereCondition } from '../src/types';
 
 function createCompiler() {
   return new QueryCompiler();
@@ -41,8 +42,8 @@ describe('QueryCompiler', () => {
 
       expect(result.cypher).toContain('n.name = $name1');
       expect(result.cypher).toContain('n.age = $age2');
-      expect(result.params.name1).toBe('Alice');
-      expect(result.params.age2).toBe(30);
+      expect(result.params['name1']).toBe('Alice');
+      expect(result.params['age2']).toBe(30);
     });
 
     it('compiles OR conditions', () => {
@@ -54,8 +55,8 @@ describe('QueryCompiler', () => {
 
       expect(result.cypher).toContain('n.name = $name1');
       expect(result.cypher).toContain('n.name = $name2');
-      expect(result.params.name1).toBe('Alice');
-      expect(result.params.name2).toBe('Bob');
+      expect(result.params['name1']).toBe('Alice');
+      expect(result.params['name2']).toBe('Bob');
     });
 
     it('compiles NOT conditions', () => {
@@ -67,7 +68,7 @@ describe('QueryCompiler', () => {
 
       expect(result.cypher).toContain('NOT (');
       expect(result.cypher).toContain('n.name = $name1');
-      expect(result.params.name1).toBe('Alice');
+      expect(result.params['name1']).toBe('Alice');
     });
 
     it('includes ORDER BY clause', () => {
@@ -123,15 +124,14 @@ describe('QueryCompiler', () => {
     it('generates MATCH with id', () => {
       const nodeConfig = {
         label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, name: { type: 'string' as const } },
+        properties: {
+          id: { type: 'string' as const, primary: true },
+          name: { type: 'string' as const },
+        },
         relations: {},
       };
 
-      const result = compiler.compileFindUnique(
-        'User',
-        { id: 'abc-123' },
-        nodeConfig
-      );
+      const result = compiler.compileFindUnique('User', { id: 'abc-123' }, nodeConfig);
 
       expect(result.cypher).toContain('MATCH (n:User {id: $id})');
       expect(result.cypher).toContain('RETURN n');
@@ -141,15 +141,14 @@ describe('QueryCompiler', () => {
     it('generates MATCH with WHERE for non-id conditions', () => {
       const nodeConfig = {
         label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, email: { type: 'string' as const, unique: true } },
+        properties: {
+          id: { type: 'string' as const, primary: true },
+          email: { type: 'string' as const, unique: true },
+        },
         relations: {},
       };
 
-      const result = compiler.compileFindUnique(
-        'User',
-        { email: 'alice@test.com' },
-        nodeConfig
-      );
+      const result = compiler.compileFindUnique('User', { email: 'alice@test.com' }, nodeConfig);
 
       expect(result.cypher).toContain('MATCH (n:User)');
       expect(result.cypher).toContain('WHERE n.email = $email1');
@@ -162,15 +161,14 @@ describe('QueryCompiler', () => {
     it('generates CREATE with properties', () => {
       const nodeConfig = {
         label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, name: { type: 'string' as const } },
+        properties: {
+          id: { type: 'string' as const, primary: true },
+          name: { type: 'string' as const },
+        },
         relations: {},
       };
 
-      const result = compiler.compileCreate(
-        'User',
-        { id: 'abc-123', name: 'Alice' },
-        nodeConfig
-      );
+      const result = compiler.compileCreate('User', { id: 'abc-123', name: 'Alice' }, nodeConfig);
 
       expect(result.cypher).toContain('CREATE (n:User');
       expect(result.cypher).toContain('id: $id1');
@@ -196,7 +194,10 @@ describe('QueryCompiler', () => {
     it('generates MATCH SET with id', () => {
       const nodeConfig = {
         label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, name: { type: 'string' as const } },
+        properties: {
+          id: { type: 'string' as const, primary: true },
+          name: { type: 'string' as const },
+        },
         relations: {},
       };
 
@@ -204,7 +205,7 @@ describe('QueryCompiler', () => {
         'User',
         { id: 'abc-123' },
         { name: 'Alice Updated' },
-        nodeConfig
+        nodeConfig,
       );
 
       expect(result.cypher).toContain('MATCH (n:User {id: $matchId})');
@@ -216,15 +217,18 @@ describe('QueryCompiler', () => {
     it('generates MATCH with WHERE for non-id conditions', () => {
       const nodeConfig = {
         label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, email: { type: 'string' as const } },
+        properties: {
+          id: { type: 'string' as const, primary: true },
+          email: { type: 'string' as const },
+        },
         relations: {},
       };
 
-      const result = compiler.compileUpdate(
+      const result = compiler.compileUpdate<Record<string, unknown>>(
         'User',
         { email: 'alice@test.com' },
         { name: 'Alice Updated' },
-        nodeConfig
+        nodeConfig,
       );
 
       expect(result.cypher).toContain('MATCH (n:User) WHERE n.email = $email1');
@@ -242,11 +246,7 @@ describe('QueryCompiler', () => {
         relations: {},
       };
 
-      const result = compiler.compileDelete(
-        'User',
-        { id: 'abc-123' },
-        nodeConfig
-      );
+      const result = compiler.compileDelete('User', { id: 'abc-123' }, nodeConfig);
 
       expect(result.cypher).toContain('MATCH (n:User {id: $matchId})');
       expect(result.cypher).toContain('DETACH DELETE n');
@@ -392,6 +392,14 @@ describe('QueryCompiler', () => {
       const result = compiler.compileCreateRelation('a1', 'KNOWS', 'b1', 'BOTH');
       expect(result.cypher).toContain('CREATE (a)-[r:KNOWS]-(b)');
     });
+
+    it('uses elementId() instead of deprecated id()', () => {
+      const result = compiler.compileCreateRelation('a1', 'FOLLOWS', 'b1', 'OUT');
+      expect(result.cypher).toContain('elementId(a) = $fromId');
+      expect(result.cypher).toContain('elementId(b) = $toId');
+      expect(result.cypher).not.toContain('id(a)');
+      expect(result.cypher).not.toMatch(/\bid\(/);
+    });
   });
 
   describe('compileDeleteRelation', () => {
@@ -400,28 +408,101 @@ describe('QueryCompiler', () => {
       expect(result.cypher).toContain('MATCH (a)-[r:FOLLOWS]->(b)');
       expect(result.cypher).toContain('DELETE r');
     });
+
+    it('filters both endpoints by elementId', () => {
+      const result = compiler.compileDeleteRelation('a1', 'FOLLOWS', 'b1', 'OUT');
+      expect(result.cypher).toContain('elementId(a) = $fromId');
+      expect(result.cypher).toContain('elementId(b) = $toId');
+      expect(result.params).toEqual({ fromId: 'a1', toId: 'b1' });
+    });
   });
 
   describe('compileUpsert', () => {
-    it('generates MERGE query', () => {
-      const nodeConfig = {
-        label: 'User' as const,
-        properties: { id: { type: 'string' as const, primary: true }, name: { type: 'string' as const } },
-        relations: {},
-      };
+    const nodeConfig = {
+      label: 'User' as const,
+      properties: {
+        id: { type: 'string' as const, primary: true },
+        name: { type: 'string' as const },
+      },
+      relations: {},
+    };
 
-      const result = compiler.compileUpsert(
+    it('generates MERGE query', () => {
+      const result = compiler.compileUpsert<Record<string, unknown>>(
         'User',
         { id: 'abc-123' },
         { id: 'abc-123', name: 'Alice' },
         { name: 'Alice Updated' },
-        nodeConfig
+        nodeConfig,
       );
 
       expect(result.cypher).toContain('MERGE');
       expect(result.cypher).toContain('ON CREATE');
       expect(result.cypher).toContain('ON MATCH');
       expect(result.cypher).toContain('RETURN n');
+    });
+
+    it('MERGEs on the primary key pattern with a parameterized value', () => {
+      const result = compiler.compileUpsert<Record<string, unknown>>(
+        'User',
+        { id: 'abc-123' },
+        { id: 'abc-123', name: 'Alice' },
+        { name: 'Alice Updated' },
+        nodeConfig,
+      );
+
+      expect(result.cypher).toContain('MERGE (n:User {id: $mergeKey})');
+      expect(result.params['mergeKey']).toBe('abc-123');
+    });
+
+    it('emits valid ON CREATE / ON MATCH SET clauses with intact param names', () => {
+      const result = compiler.compileUpsert<Record<string, unknown>>(
+        'User',
+        { id: 'abc-123' },
+        { id: 'abc-123', name: 'Alice' },
+        { name: 'Alice Updated' },
+        nodeConfig,
+      );
+
+      expect(result.cypher).toMatch(/ON CREATE SET n\.id = \$c_id\d+, n\.name = \$c_name\d+/);
+      expect(result.cypher).toMatch(/ON MATCH SET n\.name = \$u_name\d+/);
+      const params = result.params;
+      expect(params['mergeKey']).toBe('abc-123');
+      expect(Object.values(params)).toContain('abc-123');
+      expect(Object.values(params)).toContain('Alice');
+      expect(Object.values(params)).toContain('Alice Updated');
+    });
+
+    it('accepts eq operator on the primary key', () => {
+      const result = compiler.compileUpsert<Record<string, unknown>>(
+        'User',
+        { id: { eq: 'abc-123' } } as unknown as WhereCondition<Record<string, unknown>> & {
+          id?: string;
+        },
+        { name: 'Alice' },
+        { name: 'Updated' },
+        nodeConfig,
+      );
+      expect(result.cypher).toContain('MERGE (n:User {id: $mergeKey})');
+      expect(result.params['mergeKey']).toBe('abc-123');
+    });
+
+    it('falls back to timestamp defaults when create/update are empty', () => {
+      const result = compiler.compileUpsert('User', { id: 'abc-123' }, {}, {}, nodeConfig);
+      expect(result.cypher).toContain('ON CREATE SET n.createdAt = datetime()');
+      expect(result.cypher).toContain('ON MATCH SET n.updatedAt = datetime()');
+    });
+
+    it('throws when where has no primary-key equality', () => {
+      expect(() =>
+        compiler.compileUpsert(
+          'User',
+          { name: 'Alice' },
+          { name: 'Alice' },
+          { name: 'Updated' },
+          nodeConfig,
+        ),
+      ).toThrow(/primary key/);
     });
   });
 

@@ -1,7 +1,12 @@
 // @metal/neo4j-driver/src/index.ts
 // Neo4j driver adapter - wraps neo4j-driver with connection management
 
-import neo4j, { Driver, Session, ManagedTransaction } from 'neo4j-driver';
+import neo4j, {
+  type Driver,
+  type ManagedTransaction,
+  type QueryResult,
+  type Session,
+} from 'neo4j-driver';
 
 export interface Neo4jConfig {
   uri: string;
@@ -47,8 +52,16 @@ export interface MetalDriverAdapter {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   runQuery(cypher: string, params?: Record<string, unknown>): Promise<Neo4jQueryResult>;
-  runInTransaction<T>(work: (txc: { run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult> }) => Promise<T>): Promise<T>;
-  runInReadTransaction<T>(work: (txc: { run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult> }) => Promise<T>): Promise<T>;
+  runInTransaction<T>(
+    work: (txc: {
+      run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult>;
+    }) => Promise<T>,
+  ): Promise<T>;
+  runInReadTransaction<T>(
+    work: (txc: {
+      run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult>;
+    }) => Promise<T>,
+  ): Promise<T>;
   verifyConnectivity(): Promise<boolean>;
   getServerInfo(): Promise<{ address: string; version: string; protocol: string }>;
 }
@@ -72,14 +85,14 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
           maxConnectionLifetime: this.config.maxConnectionLifetime ?? 3 * 60 * 60 * 1000,
           maxTransactionRetryTime: this.config.maxTransactionRetryTime ?? 30 * 1000,
           connectionAcquisitionTimeout: this.config.connectionAcquisitionTimeout ?? 10 * 1000,
-        }
+        },
       );
 
       await this.driver.getServerInfo();
     } catch (error) {
       this.driver = null;
       throw new Error(
-        `Failed to connect to Neo4j at ${this.config.uri}: ${(error as Error).message}`
+        `Failed to connect to Neo4j at ${this.config.uri}: ${(error as Error).message}`,
       );
     }
   }
@@ -94,7 +107,7 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
   getDriver(): Driver {
     if (!this.driver) {
       throw new Error(
-        'Neo4j driver not connected. Call connect() first or use MetalClient.connect().'
+        'Neo4j driver not connected. Call connect() first or use MetalClient.connect().',
       );
     }
     return this.driver;
@@ -113,7 +126,7 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
   async runQuery(
     cypher: string,
     params?: Record<string, unknown>,
-    sessionConfig?: Neo4jSessionConfig
+    sessionConfig?: Neo4jSessionConfig,
   ): Promise<Neo4jQueryResult> {
     const session = this.session(sessionConfig);
     try {
@@ -125,7 +138,9 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
   }
 
   async runInTransaction<T>(
-    work: (txc: { run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult> }) => Promise<T>
+    work: (txc: {
+      run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult>;
+    }) => Promise<T>,
   ): Promise<T> {
     const session = this.session();
     try {
@@ -144,7 +159,9 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
   }
 
   async runInReadTransaction<T>(
-    work: (txc: { run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult> }) => Promise<T>
+    work: (txc: {
+      run: (query: string, params?: Record<string, unknown>) => Promise<Neo4jQueryResult>;
+    }) => Promise<T>,
   ): Promise<T> {
     const session = this.session({ mode: 'READ' });
     try {
@@ -172,7 +189,7 @@ export class Neo4jDriverAdapter implements MetalDriverAdapter {
     }
   }
 
-async getServerInfo(): Promise<{
+  async getServerInfo(): Promise<{
     address: string;
     version: string;
     protocol: string;
@@ -180,14 +197,14 @@ async getServerInfo(): Promise<{
     const info = await this.getDriver().getServerInfo();
     return {
       address: info.address ?? '',
-      version: (info as any).version ?? '',
-      protocol: String((info as any).protocolVersion ?? ''),
+      version: (info as { version?: string }).version ?? '',
+      protocol: String((info as { protocolVersion?: number }).protocolVersion ?? ''),
     };
   }
 
-  private mapResult(result: any): Neo4jQueryResult {
+  private mapResult(result: QueryResult): Neo4jQueryResult {
     const summary = result.summary;
-    const records = (result.records ?? []).map((record: any) => ({
+    const records = (result.records ?? []).map((record) => ({
       keys: record.keys as string[],
       get: (key: string): unknown => {
         try {
@@ -205,6 +222,11 @@ async getServerInfo(): Promise<{
       },
     }));
 
+    const counterFns = summary?.counters as unknown as
+      | Record<string, (() => number) | undefined>
+      | undefined;
+    const counter = (name: string): number => Number(counterFns?.[name]?.() ?? 0);
+
     return {
       records,
       summary: {
@@ -213,19 +235,19 @@ async getServerInfo(): Promise<{
           parameters: (summary?.query?.parameters ?? {}) as Record<string, unknown>,
         },
         counters: {
-          nodesCreated: Number(summary?.counters?.nodesCreated?.() ?? 0),
-          nodesDeleted: Number(summary?.counters?.nodesDeleted?.() ?? 0),
-          relationshipsCreated: Number(summary?.counters?.relationshipsCreated?.() ?? 0),
-          relationshipsDeleted: Number(summary?.counters?.relationshipsDeleted?.() ?? 0),
-          propertiesSet: Number(summary?.counters?.propertiesSet?.() ?? 0),
-          labelsAdded: Number(summary?.counters?.labelsAdded?.() ?? 0),
-          labelsRemoved: Number(summary?.counters?.labelsRemoved?.() ?? 0),
-          indexesAdded: Number(summary?.counters?.indexesAdded?.() ?? 0),
-          indexesRemoved: Number(summary?.counters?.indexesRemoved?.() ?? 0),
-          constraintsAdded: Number(summary?.counters?.constraintsAdded?.() ?? 0),
-          constraintsRemoved: Number(summary?.counters?.constraintsRemoved?.() ?? 0),
+          nodesCreated: counter('nodesCreated'),
+          nodesDeleted: counter('nodesDeleted'),
+          relationshipsCreated: counter('relationshipsCreated'),
+          relationshipsDeleted: counter('relationshipsDeleted'),
+          propertiesSet: counter('propertiesSet'),
+          labelsAdded: counter('labelsAdded'),
+          labelsRemoved: counter('labelsRemoved'),
+          indexesAdded: counter('indexesAdded'),
+          indexesRemoved: counter('indexesRemoved'),
+          constraintsAdded: counter('constraintsAdded'),
+          constraintsRemoved: counter('constraintsRemoved'),
         },
-        notifications: (summary?.notifications ?? []).map((n: any) => ({
+        notifications: (summary?.notifications ?? []).map((n) => ({
           code: n.code,
           title: n.title,
           description: n.description,
@@ -235,7 +257,7 @@ async getServerInfo(): Promise<{
         resultConsumedAfter: Number(summary?.resultConsumedAfter ?? 0),
         database: { name: summary?.database?.name ?? '' },
       },
-      keys: (result.keys ?? []) as string[],
+      keys: (result.records?.[0]?.keys ?? []) as string[],
     };
   }
 }
@@ -244,5 +266,5 @@ export function createNeo4jDriver(config: Neo4jConfig): Neo4jDriverAdapter {
   return new Neo4jDriverAdapter(config);
 }
 
+export type { Driver, ManagedTransaction, Session } from 'neo4j-driver';
 export { neo4j };
-export type { Driver, Session, ManagedTransaction } from 'neo4j-driver';

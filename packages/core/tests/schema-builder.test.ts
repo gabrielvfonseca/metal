@@ -1,6 +1,16 @@
 // @metal/core/tests/schema-builder.test.ts
-import { describe, it, expect } from 'vitest';
-import { node, defineRel, schema, string, number, date, uuid, relation, property } from '../src/schema/index';
+import { describe, expect, it } from 'vitest';
+import {
+  date,
+  defineRel,
+  node,
+  number,
+  property,
+  relation,
+  schema,
+  string,
+  uuid,
+} from '../src/schema/index';
 
 describe('node', () => {
   it('creates a node with a label', () => {
@@ -36,15 +46,15 @@ describe('node', () => {
       .add('following', relation('FOLLOWS', 'OUT', 'User', { multiple: true }))
       .build();
 
-    expect(userNode.relations.posts).toBeDefined();
-    expect(userNode.relations.posts?.type).toBe('POSTED');
-    expect(userNode.relations.posts?.direction).toBe('OUT');
-    expect(userNode.relations.posts?.target).toBe('Post');
-    expect(userNode.relations.posts?.multiple).toBe(true);
+    expect(userNode.relations['posts']).toBeDefined();
+    expect(userNode.relations['posts']?.type).toBe('POSTED');
+    expect(userNode.relations['posts']?.direction).toBe('OUT');
+    expect(userNode.relations['posts']?.target).toBe('Post');
+    expect(userNode.relations['posts']?.multiple).toBe(true);
 
-    expect(userNode.relations.following).toBeDefined();
-    expect(userNode.relations.following?.type).toBe('FOLLOWS');
-    expect(userNode.relations.following?.target).toBe('User');
+    expect(userNode.relations['following']).toBeDefined();
+    expect(userNode.relations['following']?.type).toBe('FOLLOWS');
+    expect(userNode.relations['following']?.target).toBe('User');
   });
 
   it('adds indexes', () => {
@@ -114,10 +124,7 @@ describe('node', () => {
       .add('author', relation('POSTED', 'IN', 'User'))
       .build();
 
-    const sch = schema()
-      .add('User', User)
-      .add('Post', Post)
-      .build();
+    const sch = schema().add('User', User).add('Post', Post).build();
 
     expect(sch.User).toBeDefined();
     expect(sch.Post).toBeDefined();
@@ -211,10 +218,7 @@ describe('schema()', () => {
       .add('content', string())
       .build();
 
-    const sch = schema()
-      .add('User', User)
-      .add('Post', Post)
-      .build();
+    const sch = schema().add('User', User).add('Post', Post).build();
 
     expect(sch.User).toBe(User);
     expect(sch.Post).toBe(Post);

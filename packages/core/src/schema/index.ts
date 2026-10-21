@@ -1,18 +1,21 @@
 // @metal/core/src/schema/index.ts
 // Schema definition API - Drizzle-style fluent API
 
-import {
-  PropertyConfig,
-  PropertyType,
-  NodeConfig,
-  RelationConfig,
-  RelationDirection,
+import type {
   InferNodeProperties,
   InferNodeRelations,
-  PropertyTypeToJSType,
+  NodeConfig,
+  PropertyConfig,
+  PropertyType,
+  RelationConfig,
+  RelationDirection,
 } from '../types';
 
-export interface NodeBuilder<TName extends string, TProps extends Record<string, PropertyConfig>, TRels extends Record<string, RelationConfig<any, any>>> {
+export interface NodeBuilder<
+  TName extends string,
+  TProps extends Record<string, PropertyConfig>,
+  TRels extends Record<string, RelationConfig<any, any>>,
+> {
   label: TName;
   properties: TProps;
   relations: TRels;
@@ -21,12 +24,12 @@ export interface NodeBuilder<TName extends string, TProps extends Record<string,
 
   add<K extends string, T extends PropertyConfig>(
     key: K,
-    config: T
+    config: T,
   ): NodeBuilder<TName, TProps & Record<K, T>, TRels>;
 
   add<K extends string, TFrom extends string, TTo extends string>(
     key: K,
-    config: RelationConfig<TFrom, TTo>
+    config: RelationConfig<TFrom, TTo>,
   ): NodeBuilder<TName, TProps, TRels & Record<K, RelationConfig<TFrom, TTo>>>;
 
   index(fields: Array<keyof TProps>, unique?: boolean): this;
@@ -35,12 +38,16 @@ export interface NodeBuilder<TName extends string, TProps extends Record<string,
   build(): NodeConfig<TName, TProps>;
 }
 
-function createNodeBuilder<TName extends string, TProps extends Record<string, PropertyConfig>, TRels extends Record<string, RelationConfig<any, any>>>(
+function createNodeBuilder<
+  TName extends string,
+  TProps extends Record<string, PropertyConfig>,
+  TRels extends Record<string, RelationConfig<any, any>>,
+>(
   label: TName,
   initialProps: TProps,
   initialRels: TRels,
   indexes: NodeConfig<any, any>['indexes'] = [],
-  constraints: NodeConfig<any, any>['constraints'] = []
+  constraints: NodeConfig<any, any>['constraints'] = [],
 ): NodeBuilder<TName, TProps, TRels> {
   const builder: NodeBuilder<TName, TProps, TRels> = {
     label,
@@ -56,7 +63,7 @@ function createNodeBuilder<TName extends string, TProps extends Record<string, P
           initialProps,
           { ...initialRels, [key]: config } as TRels & Record<K, RelationConfig<string, string>>,
           indexes,
-          constraints
+          constraints,
         );
       }
       return createNodeBuilder(
@@ -64,7 +71,7 @@ function createNodeBuilder<TName extends string, TProps extends Record<string, P
         { ...initialProps, [key]: config } as TProps & Record<K, PropertyConfig>,
         initialRels,
         indexes,
-        constraints
+        constraints,
       );
     },
 
@@ -74,18 +81,15 @@ function createNodeBuilder<TName extends string, TProps extends Record<string, P
         initialProps,
         initialRels,
         [...indexes, { fields, unique }] as NonNullable<NodeConfig<TName, TProps>['indexes']>,
-        constraints
+        constraints,
       );
     },
 
     constraint(fields: Array<keyof TProps>, type: 'UNIQUE' | 'EXISTS') {
-      return createNodeBuilder(
-        label,
-        initialProps,
-        initialRels,
-        indexes,
-        [...constraints, { fields, type }] as NonNullable<NodeConfig<TName, TProps>['constraints']>
-      );
+      return createNodeBuilder(label, initialProps, initialRels, indexes, [
+        ...constraints,
+        { fields, type },
+      ] as NonNullable<NodeConfig<TName, TProps>['constraints']>);
     },
 
     build() {
@@ -103,10 +107,13 @@ function createNodeBuilder<TName extends string, TProps extends Record<string, P
 }
 
 export function node<TName extends string>(label: TName) {
-  return createNodeBuilder<TName, {}, {}>(label, {}, {});
+  return createNodeBuilder<TName, Record<string, never>, Record<string, never>>(label, {}, {});
 }
 
-export function property<T extends PropertyType>(type: T, config?: Omit<PropertyConfig<T>, 'type'>): PropertyConfig<T> {
+export function property<T extends PropertyType>(
+  type: T,
+  config?: Omit<PropertyConfig<T>, 'type'>,
+): PropertyConfig<T> {
   return { type, ...config } as PropertyConfig<T>;
 }
 
@@ -149,7 +156,7 @@ export function relation<TFrom extends string, TTo extends string>(
   config?: {
     properties?: Record<string, PropertyConfig>;
     multiple?: boolean;
-  }
+  },
 ): RelationConfig<TFrom, TTo> {
   return {
     type,
@@ -177,7 +184,7 @@ export function path<TFrom extends string, TTo extends string>(
   type: string,
   direction: RelationDirection,
   target: TTo,
-  config?: PathConfig
+  config?: PathConfig,
 ): RelationConfig<TFrom, TTo> & { path?: PathConfig } {
   return {
     type,
@@ -195,7 +202,7 @@ export function shortestPath<TFrom extends string, TTo extends string>(
   type: string,
   direction: RelationDirection,
   target: TTo,
-  config?: PathConfig
+  config?: PathConfig,
 ): RelationConfig<TFrom, TTo> & { _shortestPath?: true } {
   return {
     type,
@@ -214,7 +221,7 @@ export function allShortestPaths<TFrom extends string, TTo extends string>(
   type: string,
   direction: RelationDirection,
   target: TTo,
-  config?: PathConfig
+  config?: PathConfig,
 ): RelationConfig<TFrom, TTo> & { _allShortestPaths?: true } {
   return {
     type,
@@ -233,7 +240,7 @@ export function defineRel<TFrom extends string, TTo extends string>(
   config?: {
     properties?: Record<string, PropertyConfig>;
     multiple?: boolean;
-  }
+  },
 ): RelationConfig<TFrom, TTo> {
   return relation(type, direction, target, config);
 }
@@ -241,23 +248,23 @@ export function defineRel<TFrom extends string, TTo extends string>(
 export interface SchemaBuilder<TNodes extends Record<string, NodeConfig<any, any>>> {
   nodes: TNodes;
 
-  add<TName extends string, TProps extends Record<string, PropertyConfig>, TRels extends Record<string, RelationConfig<any, any>>>(
+  add<TName extends string, TProps extends Record<string, PropertyConfig>>(
     name: TName,
-    node: NodeConfig<TName, TProps>
+    node: NodeConfig<TName, TProps>,
   ): SchemaBuilder<TNodes & Record<TName, NodeConfig<TName, TProps>>>;
 
   build(): TNodes;
 }
 
 function createSchemaBuilder<TNodes extends Record<string, NodeConfig<any, any>>>(
-  nodes: TNodes = {} as TNodes
+  nodes: TNodes = {} as TNodes,
 ): SchemaBuilder<TNodes> {
   return {
     nodes,
 
-    add<TName extends string, TProps extends Record<string, PropertyConfig>, TRels extends Record<string, RelationConfig<any, any>>>(
+    add<TName extends string, TProps extends Record<string, PropertyConfig>>(
       name: TName,
-      node: NodeConfig<TName, TProps>
+      node: NodeConfig<TName, TProps>,
     ) {
       return createSchemaBuilder({
         ...nodes,
@@ -275,9 +282,13 @@ export function schema() {
   return createSchemaBuilder();
 }
 
-export type InferSchemaNodes<T extends ReturnType<typeof schema>> = T extends SchemaBuilder<infer U> ? U : never;
+export type InferSchemaNodes<T extends ReturnType<typeof schema>> =
+  T extends SchemaBuilder<infer U> ? U : never;
 
-export type InferNodeFromSchema<T extends ReturnType<typeof schema>, TName extends keyof InferSchemaNodes<T>> =
-  InferNodeProperties<InferSchemaNodes<T>[TName]> & InferNodeRelations<InferSchemaNodes<T>[TName]>;
+export type InferNodeFromSchema<
+  T extends ReturnType<typeof schema>,
+  TName extends keyof InferSchemaNodes<T>,
+> = InferNodeProperties<InferSchemaNodes<T>[TName]> &
+  InferNodeRelations<InferSchemaNodes<T>[TName]>;
 
 export type SchemaNodeNames<T extends ReturnType<typeof schema>> = keyof InferSchemaNodes<T>;

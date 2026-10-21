@@ -1,0 +1,52 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      metal-packages:
+        patterns:
+          - "@metal/*"
+      dev-tools:
+        patterns:
+          - "typescript"
+          - "tsup"
+          - "vitest"
+          - "turbo"
+          - "husky"
+          - "biome"
+          - "ultracite"
+          - "zod"
+          - "@t3-oss/env-core"
+
+  - package-ecosystem: "npm"
+    directory: "/cli"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
+    directory: "/packages/core"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
+    directory: "/packages/neo4j-driver"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
+    directory: "/packages/zod"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

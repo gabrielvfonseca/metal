@@ -1,0 +1,15 @@
+---
+name: Issue Config
+description: Configure issue templates
+labels: ['triage']
+---
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: Metal Discord
+    url: https://discord.gg/metal
+    about: Join the community for real-time help
+  - name: Metal Documentation
+    url: https://github.com/gabrielvfonseca/metal/tree/master/docs
+    about: Read the full documentation

@@ -3,8 +3,11 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**"],
+      "outputs": ["dist/**", "build/**", ".turbo/**"],
       "cache": true
+    },
+    "clean": {
+      "cache": false
     },
     "dev": {
       "cache": false,
@@ -12,19 +15,32 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": ["coverage/**"],
+      "outputs": ["coverage/**", ".turbo/**"],
       "cache": true
     },
     "test:ci": {
       "dependsOn": ["build"],
       "cache": false
     },
-    "lint": {
+    "test:coverage": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
       "cache": true
+    },
+    "test:root": {
+      "cache": false
+    },
+    "test:root:ci": {
+      "cache": false
+    },
+    "lint": {
+      "cache": true,
+      "outputs": [".turbo/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "cache": true
+      "cache": true,
+      "outputs": [".turbo/**"]
     }
   },
   "globalEnv": ["NODE_ENV", "NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD"]

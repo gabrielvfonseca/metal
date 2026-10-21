@@ -1,29 +1,36 @@
 // @metal/zod/src/index.ts
 // Zod validation integration for Metal
 
-import { z } from 'zod';
 import type {
+  CreateInput,
   NodeConfig,
   PropertyConfig,
   PropertyType,
-  CreateInput,
   UpdateInput,
 } from '@metal/core';
+import { z } from 'zod';
 
-type PropertyTypeToZodType<T extends PropertyType> =
-  T extends 'string' ? z.ZodString
-  : T extends 'number' ? z.ZodNumber
-  : T extends 'boolean' ? z.ZodBoolean
-  : T extends 'date' ? z.ZodDate
-  : T extends 'bigint' ? z.ZodBigInt
-  : T extends 'float' ? z.ZodNumber
-  : T extends 'uuid' ? z.ZodString
-  : T extends 'json' ? z.ZodUnknown
-  : z.ZodTypeAny;
+type PropertyTypeToZodType<T extends PropertyType> = T extends 'string'
+  ? z.ZodString
+  : T extends 'number'
+    ? z.ZodNumber
+    : T extends 'boolean'
+      ? z.ZodBoolean
+      : T extends 'date'
+        ? z.ZodDate
+        : T extends 'bigint'
+          ? z.ZodBigInt
+          : T extends 'float'
+            ? z.ZodNumber
+            : T extends 'uuid'
+              ? z.ZodString
+              : T extends 'json'
+                ? z.ZodUnknown
+                : z.ZodTypeAny;
 
 function propertyTypeToZod<T extends PropertyType>(
   type: T,
-  config: PropertyConfig<T>
+  config: PropertyConfig<T>,
 ): PropertyTypeToZodType<T> {
   let schema: z.ZodTypeAny;
 
@@ -56,50 +63,57 @@ function propertyTypeToZod<T extends PropertyType>(
       schema = z.unknown();
   }
 
-  if (config.nullable) {
-    schema = schema.nullable();
-  }
-
   if (config.array) {
     schema = z.array(schema);
   }
 
+  if (config.nullable) {
+    schema = schema.nullable();
+  }
+
   if (config.default !== undefined) {
-    const defaultValue = typeof config.default === 'function'
-      ? (config.default as () => unknown)()
-      : config.default;
+    const defaultValue =
+      typeof config.default === 'function' ? (config.default as () => unknown)() : config.default;
     schema = schema.default(defaultValue);
   }
 
   return schema as PropertyTypeToZodType<T>;
 }
 
-function propertiesToZodShape(properties: Record<string, PropertyConfig>): Record<string, z.ZodTypeAny> {
+function propertiesToZodShape(
+  properties: Record<string, PropertyConfig>,
+): Record<string, z.ZodTypeAny> {
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const [key, config] of Object.entries(properties)) {
     const propConfig = config as PropertyConfig;
-    shape[key] = propertyTypeToZod(propConfig.type as PropertyType, propConfig as PropertyConfig<any>);
+    shape[key] = propertyTypeToZod(
+      propConfig.type as PropertyType,
+      propConfig as PropertyConfig<any>,
+    );
   }
 
   return shape;
 }
 
 export function toZodSchema<T extends string>(
-  nodeConfig: NodeConfig<T, any>
+  nodeConfig: NodeConfig<T, any>,
 ): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape = propertiesToZodShape(nodeConfig.properties);
   return z.object(shape);
 }
 
 export function toCreateSchema<T extends string>(
-  nodeConfig: NodeConfig<T, any>
+  nodeConfig: NodeConfig<T, any>,
 ): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const [key, config] of Object.entries(nodeConfig.properties)) {
     const propConfig = config as PropertyConfig;
-    const schema = propertyTypeToZod(propConfig.type as PropertyType, propConfig as PropertyConfig<any>);
+    const schema = propertyTypeToZod(
+      propConfig.type as PropertyType,
+      propConfig as PropertyConfig<any>,
+    );
     if (propConfig.nullable && propConfig.default === undefined) {
       shape[key] = schema.optional();
     } else {
@@ -111,7 +125,7 @@ export function toCreateSchema<T extends string>(
 }
 
 export function toUpdateSchema<T extends string>(
-  nodeConfig: NodeConfig<T, any>
+  nodeConfig: NodeConfig<T, any>,
 ): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {};
 
@@ -127,8 +141,10 @@ export function toUpdateSchema<T extends string>(
 
 export function validateCreate<T extends string>(
   nodeConfig: NodeConfig<T, any>,
-  data: unknown
-): { success: true; data: CreateInput<Record<string, unknown>> } | { success: false; error: z.ZodError } {
+  data: unknown,
+):
+  | { success: true; data: CreateInput<Record<string, unknown>> }
+  | { success: false; error: z.ZodError } {
   const schema = toCreateSchema(nodeConfig);
   const result = schema.safeParse(data);
   if (result.success) {
@@ -139,8 +155,10 @@ export function validateCreate<T extends string>(
 
 export function validateUpdate<T extends string>(
   nodeConfig: NodeConfig<T, any>,
-  data: unknown
-): { success: true; data: UpdateInput<Record<string, unknown>> } | { success: false; error: z.ZodError } {
+  data: unknown,
+):
+  | { success: true; data: UpdateInput<Record<string, unknown>> }
+  | { success: false; error: z.ZodError } {
   const schema = toUpdateSchema(nodeConfig);
   const result = schema.safeParse(data);
   if (result.success) {
@@ -154,7 +172,7 @@ export function validationHooks<T extends string>(
   options?: {
     beforeCreate?: boolean;
     beforeUpdate?: boolean;
-  }
+  },
 ): {
   beforeCreate?: (data: unknown) => CreateInput<Record<string, unknown>>;
   beforeUpdate?: (data: unknown) => UpdateInput<Record<string, unknown>>;

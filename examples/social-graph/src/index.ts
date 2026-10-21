@@ -1,12 +1,29 @@
 // index.ts - Social Graph Example
 // Demonstrates all major features of the Metal OGM library
-import { createNeo4jDriver } from '@metal/neo4j-driver';
+
 import { MetalClient } from '@metal/core';
+import { createNeo4jDriver } from '@metal/neo4j-driver';
 import { graph } from './schema.js';
 
 const URI = process.env.NEO4J_URI || 'bolt://localhost:7687';
 const USER = process.env.NEO4J_USER || 'neo4j';
 const PASSWORD = process.env.NEO4J_PASSWORD || 'password';
+
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  age: number | null;
+  createdAt: Date;
+};
+
+type PostRow = {
+  id: string;
+  title: string;
+  content: string | null;
+  published: boolean;
+  createdAt: Date;
+};
 
 async function main() {
   const driver = createNeo4jDriver({ uri: URI, username: USER, password: PASSWORD });
@@ -14,19 +31,22 @@ async function main() {
   const client = new MetalClient(driver, graph);
 
   // 1. Find all users
-  const allUsers = await client.findMany('User', { limit: 10 });
-  console.log(`\n1. All users (${allUsers.length}):`, allUsers.map(u => (u as any).name).join(', '));
+  const allUsers = await client.findMany<UserRow>('User', { limit: 10 });
+  console.log(`\n1. All users (${allUsers.length}):`, allUsers.map((u) => u.name).join(', '));
 
   // 2. Find user by unique field
-  const user = await client.findUnique('User', { where: { email: 'alice@example.com' } });
-  console.log('\n2. Find Alice by email:', (user as any)?.name ?? 'Not found');
+  const user = await client.findUnique<UserRow>('User', { where: { email: 'alice@example.com' } });
+  console.log('\n2. Find Alice by email:', user?.name ?? 'Not found');
 
   // 3. Find users with filtering and ordering
-  const youngUsers = await client.findMany('User', {
+  const youngUsers = await client.findMany<UserRow>('User', {
     where: { age: { gte: 25, lte: 32 } },
     orderBy: { age: 'desc' },
   });
-  console.log('\n3. Users aged 25-32 (by age desc):', youngUsers.map(u => `${(u as any).name} (${(u as any).age})`).join(', '));
+  console.log(
+    '\n3. Users aged 25-32 (by age desc):',
+    youngUsers.map((u) => `${u.name} (${u.age})`).join(', '),
+  );
 
   // 4. Count aggregate
   const totalUsers = await client.count('User');
@@ -41,40 +61,43 @@ async function main() {
     fromId: 'user-1',
     maxDepth: 3,
   });
-  console.log(`\n6. Alice's network (up to 3 hops):`, network.map(n => (n as any).name).join(' -> '));
+  console.log(
+    `\n6. Alice's network (up to 3 hops):`,
+    network.map((n) => String(n['name'])).join(' -> '),
+  );
 
   // 7. Update a user
-  const updated = await client.update('User', {
+  const updated = await client.update<UserRow>('User', {
     where: { id: 'user-1' },
     data: { age: 29 },
   });
-  console.log(`\n7. Updated Alice age:`, (updated as any).age);
+  console.log(`\n7. Updated Alice age:`, updated.age);
 
   // 8. Upsert - create or update
-  const upserted = await client.upsert('User', {
+  const upserted = await client.upsert<UserRow>('User', {
     where: { id: 'user-5' },
     create: { id: 'user-5', name: 'Eve', email: 'eve@example.com' },
     update: { name: 'Eve Updated' },
   });
-  console.log(`\n8. Upserted Eve:`, (upserted as any).name);
+  console.log(`\n8. Upserted Eve:`, upserted.name);
 
   // 9. Count published posts
   const publishedPosts = await client.count('Post', { published: true });
   console.log(`\n9. Published posts:`, publishedPosts);
 
   // 10. Raw Cypher query
-  const rawResult = await client.raw(
-    'MATCH (u:User)-[:FOLLOWS]->(f:User) RETURN u.name AS follower, f.name AS followed'
+  const rawResult = await client.raw<{ follower: string; followed: string }>(
+    'MATCH (u:User)-[:FOLLOWS]->(f:User) RETURN u.name AS follower, f.name AS followed',
   );
   console.log('\n10. Follow relationships (raw query):');
   for (const row of rawResult) {
-    console.log(`    ${(row as any).follower} follows ${(row as any).followed}`);
+    console.log(`    ${row.follower} follows ${row.followed}`);
   }
 
   // 11. Transactional batch
   await client.transaction(async (tx) => {
-    const txUser = await tx.findOne('User', { id: 'user-1' });
-    console.log(`\n11. In transaction, found:`, (txUser as any)?.name);
+    const txUser = await tx.findOne<UserRow>('User', { id: 'user-1' });
+    console.log(`\n11. In transaction, found:`, txUser?.name);
   });
 
   // 12. Delete the upserted user
@@ -89,4 +112,7 @@ async function main() {
   await driver.disconnect();
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

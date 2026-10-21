@@ -1,5 +1,5 @@
 // schema.ts - Social Graph Schema
-import { node, schema as sch, string, date, number, relation } from '@metal/core';
+import { date, node, number, relation, schema as sch, string } from '@metal/core';
 
 export const User = node('User')
   .add('id', string({ primary: true }))
@@ -24,7 +24,4 @@ export const Post = node('Post')
   .add('likedBy', relation('LIKES', 'IN', 'User', { multiple: true }))
   .build();
 
-export const graph = sch()
-  .add('User', User)
-  .add('Post', Post)
-  .build();
+export const graph = sch().add('User', User).add('Post', Post).build();

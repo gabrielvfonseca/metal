@@ -1,41 +1,19 @@
 // @metal/core/src/config/index.ts
 // Metal configuration system — inspired by Vite's defineConfig, Prisma schema, Drizzle config
 
-export interface MetalDriverConfig {
-  type: 'neo4j';
-  uri?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  maxConnectionLifetime?: number;
-  maxTransactionRetryTime?: number;
-}
+import type { MetalConfig, MetalDriverConfig, MetalOutputConfig } from '../types';
 
-export interface MetalOutputConfig {
-  /** Directory for generated types (default: ./src/__generated__) */
-  directory?: string;
-  /** When true, also generate a Zod schema file */
-  zod?: boolean;
-}
+export { env } from './keys';
 
-export interface MetalConfig {
-  /** Path to schema definition file */
-  schema: string;
-  /** Output configuration for codegen */
-  output?: MetalOutputConfig;
-  /** Database driver configuration */
-  driver?: MetalDriverConfig;
-  /** When true, enables verbose logging */
-  debug?: boolean;
-  /** Node labels to exclude from codegen */
-  exclude?: string[];
-}
+export type { MetalConfig, MetalDriverConfig, MetalOutputConfig };
 
 export function defineConfig(config: MetalConfig): MetalConfig {
   return config;
 }
 
-export function resolveConfig(config: MetalConfig): Required<MetalConfig> & { output: Required<MetalOutputConfig> } {
+export function resolveConfig(
+  config: MetalConfig,
+): Required<MetalConfig> & { output: Required<MetalOutputConfig> } {
   return {
     schema: config.schema,
     output: {

@@ -1,17 +1,17 @@
 // @metal/core/src/query/index.ts
 // Cypher query compiler - translates high-level queries to optimized Cypher
 
-import {
-  NodeConfig,
-  RelationConfig,
-  WhereCondition,
-  OrderByInput,
-  IncludeInput,
-  SelectInput,
+import type {
   CreateInput,
-  UpdateInput,
+  IncludeInput,
+  NodeConfig,
+  NoInferShim,
+  OrderByInput,
   PropertyConfig,
-  WhereOperator,
+  RelationConfig,
+  SelectInput,
+  UpdateInput,
+  WhereCondition,
 } from '../types';
 
 export interface CompiledQuery {
@@ -33,7 +33,7 @@ export class QueryCompiler {
 
   compileWhere<T extends Record<string, unknown>>(
     where: WhereCondition<T> | undefined,
-    nodeAlias: string = 'n'
+    nodeAlias: string = 'n',
   ): CompiledQuery {
     if (!where) {
       return { cypher: '', params: {} };
@@ -52,7 +52,12 @@ export class QueryCompiler {
       const paramName = this.nextParam(key as string);
       const propRef = `${nodeAlias}.${String(key)}`;
 
-      if (value !== null && typeof value === 'object' && !(value instanceof Date) && !Array.isArray(value)) {
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !(value instanceof Date) &&
+        !Array.isArray(value)
+      ) {
         const operator = value as Record<string, unknown>;
         if ('eq' in operator) {
           conditions.push(`${propRef} = $${paramName}`);
@@ -90,7 +95,7 @@ export class QueryCompiler {
         } else if ('not' in operator) {
           const nested = this.compileNestedWhere(
             { [key]: operator['not'] } as WhereCondition<Record<string, unknown>>,
-            nodeAlias
+            nodeAlias,
           );
           conditions.push(`NOT (${nested.cypher})`);
           Object.assign(params, nested.params);
@@ -129,10 +134,7 @@ export class QueryCompiler {
     }
 
     if (where.NOT) {
-      const nested = this.compileWhere(
-        where.NOT as WhereCondition<T>,
-        nodeAlias
-      );
+      const nested = this.compileWhere(where.NOT as WhereCondition<T>, nodeAlias);
       if (nested.cypher) {
         conditions.push(`NOT (${nested.cypher})`);
       }
@@ -146,17 +148,11 @@ export class QueryCompiler {
     return { cypher: conditions.join(' AND '), params };
   }
 
-  private compileNestedWhere<T>(
-    value: Record<string, unknown>,
-    nodeAlias: string
-  ): CompiledQuery {
+  private compileNestedWhere<T>(value: Record<string, unknown>, nodeAlias: string): CompiledQuery {
     return this.compileWhere(value as WhereCondition<T>, nodeAlias);
   }
 
-  compileOrderBy<T>(
-    orderBy: OrderByInput<T> | undefined,
-    nodeAlias: string = 'n'
-  ): string {
+  compileOrderBy<T>(orderBy: OrderByInput<T> | undefined, nodeAlias: string = 'n'): string {
     if (!orderBy) return '';
 
     const clauses: string[] = [];
@@ -171,10 +167,7 @@ export class QueryCompiler {
     return `ORDER BY ${clauses.join(', ')}`;
   }
 
-  compileSelect<T>(
-    select: SelectInput<T> | undefined,
-    nodeAlias: string = 'n'
-  ): string {
+  compileSelect<T>(select: SelectInput<T> | undefined, nodeAlias: string = 'n'): string {
     if (!select) return `${nodeAlias}`;
 
     const selectedFields = Object.entries(select)
@@ -194,7 +187,7 @@ export class QueryCompiler {
       limit?: number;
       skip?: number;
       select?: SelectInput<T>;
-    }
+    },
   ): CompiledQuery {
     this.reset();
 
@@ -227,8 +220,8 @@ export class QueryCompiler {
 
   compileFindUnique<T extends Record<string, unknown>>(
     label: string,
-    where: WhereCondition<T> & { id?: string },
-    nodeConfig: NodeConfig<any, any>
+    where: NoInferShim<WhereCondition<T> & { id?: string }>,
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
 
@@ -254,7 +247,7 @@ export class QueryCompiler {
   compileCreate<T extends Record<string, unknown>>(
     label: string,
     data: CreateInput<T>,
-    nodeConfig: NodeConfig<any, any>
+    _nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
     this.paramCounter = 0;
@@ -268,7 +261,7 @@ export class QueryCompiler {
       setClauses.push(`${String(key)}: $${paramName}`);
       params[paramName] = value;
     }
-    
+
     if (setClauses.length === 0) {
       const cypher = `CREATE (n:${label}) RETURN n`;
       return { cypher, params };
@@ -284,7 +277,7 @@ export class QueryCompiler {
     label: string,
     data: CreateInput<T>,
     relations: Record<string, { connect?: { where: Record<string, unknown> } | { id: string } }>,
-    nodeConfig: NodeConfig<any, any>
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
 
@@ -334,7 +327,7 @@ export class QueryCompiler {
         const relAlias = `r${relIndex}`;
         const whereClause = this.compileWhere(
           relConfig.connect.where as WhereCondition<Record<string, unknown>>,
-          targetAlias
+          targetAlias,
         );
         Object.assign(params, whereClause.params);
 
@@ -362,9 +355,9 @@ export class QueryCompiler {
 
   compileUpdate<T extends Record<string, unknown>>(
     label: string,
-    where: WhereCondition<T> & { id?: string },
+    where: NoInferShim<WhereCondition<T> & { id?: string }>,
     data: UpdateInput<T>,
-    nodeConfig: NodeConfig<any, any>
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
 
@@ -405,8 +398,8 @@ export class QueryCompiler {
 
   compileDelete<T extends Record<string, unknown>>(
     label: string,
-    where: WhereCondition<T> & { id?: string },
-    nodeConfig: NodeConfig<any, any>
+    where: NoInferShim<WhereCondition<T> & { id?: string }>,
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
 
@@ -436,7 +429,7 @@ export class QueryCompiler {
   compileInclude(
     include: IncludeInput<Record<string, any>> | undefined,
     nodeAlias: string,
-    nodeConfig: NodeConfig<any, any>
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery[] {
     if (!include) return [];
 
@@ -452,15 +445,14 @@ export class QueryCompiler {
       const targetAlias = `r_${relName}`;
       const relAlias = `rel_${relName}`;
 
-      const direction = relConfig.direction === 'IN' ? '<-[' : '-[';
-      const directionEnd = relConfig.direction === 'OUT' ? ']->' : relConfig.direction === 'BOTH' ? ']-' : ']->';
-
       let matchClause: string;
-      if (relConfig.multiple) {
-        matchClause = `OPTIONAL MATCH (${nodeAlias})${direction}${relAlias}:${relConfig.type}${directionEnd}(${targetAlias}:${relConfig.target})`;
+      const targetPattern = `(${targetAlias}:${relConfig.target})`;
+      if (relConfig.direction === 'IN') {
+        matchClause = `OPTIONAL MATCH (${nodeAlias})<-[${relAlias}:${relConfig.type}]-${targetPattern}`;
+      } else if (relConfig.direction === 'BOTH') {
+        matchClause = `OPTIONAL MATCH (${nodeAlias})-[${relAlias}:${relConfig.type}]-${targetPattern}`;
       } else {
-        const primKey = 'id';
-        matchClause = `OPTIONAL MATCH (${nodeAlias})${direction}${relAlias}:${relConfig.type}${directionEnd}(${targetAlias}:${relConfig.target})`;
+        matchClause = `OPTIONAL MATCH (${nodeAlias})-[${relAlias}:${relConfig.type}]->${targetPattern}`;
       }
 
       const returnStr = `RETURN ${targetAlias}`;
@@ -478,18 +470,18 @@ export class QueryCompiler {
     fromId: string,
     relationType: string,
     toId: string,
-    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT'
+    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT',
   ): CompiledQuery {
     const fromAlias = 'a';
     const toAlias = 'b';
 
     let createClause: string;
     if (direction === 'OUT') {
-      createClause = `MATCH (${fromAlias}) WHERE id(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE id(${toAlias}) = $toId\nCREATE (${fromAlias})-[r:${relationType}]->(${toAlias})\nRETURN r`;
+      createClause = `MATCH (${fromAlias}) WHERE elementId(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE elementId(${toAlias}) = $toId\nCREATE (${fromAlias})-[r:${relationType}]->(${toAlias})\nRETURN r`;
     } else if (direction === 'IN') {
-      createClause = `MATCH (${fromAlias}) WHERE id(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE id(${toAlias}) = $toId\nCREATE (${fromAlias})<-[r:${relationType}]-(${toAlias})\nRETURN r`;
+      createClause = `MATCH (${fromAlias}) WHERE elementId(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE elementId(${toAlias}) = $toId\nCREATE (${fromAlias})<-[r:${relationType}]-(${toAlias})\nRETURN r`;
     } else {
-      createClause = `MATCH (${fromAlias}) WHERE id(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE id(${toAlias}) = $toId\nCREATE (${fromAlias})-[r:${relationType}]-(${toAlias})\nRETURN r`;
+      createClause = `MATCH (${fromAlias}) WHERE elementId(${fromAlias}) = $fromId\nMATCH (${toAlias}) WHERE elementId(${toAlias}) = $toId\nCREATE (${fromAlias})-[r:${relationType}]-(${toAlias})\nRETURN r`;
     }
 
     return {
@@ -502,7 +494,7 @@ export class QueryCompiler {
     fromId: string,
     relationType: string,
     toId: string,
-    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT'
+    direction: 'IN' | 'OUT' | 'BOTH' = 'OUT',
   ): CompiledQuery {
     const fromAlias = 'a';
     const toAlias = 'b';
@@ -517,17 +509,17 @@ export class QueryCompiler {
     }
 
     return {
-      cypher: `${matchClause}\nDELETE r`,
-      params: {},
+      cypher: `${matchClause}\nWHERE elementId(${fromAlias}) = $fromId AND elementId(${toAlias}) = $toId\nDELETE r`,
+      params: { fromId, toId },
     };
   }
 
   compileUpsert<T extends Record<string, unknown>>(
     label: string,
-    where: WhereCondition<T> & { id?: string },
+    where: NoInferShim<WhereCondition<T> & { id?: string }>,
     create: CreateInput<T>,
     update: UpdateInput<T>,
-    nodeConfig: NodeConfig<any, any>
+    nodeConfig: NodeConfig<any, any>,
   ): CompiledQuery {
     this.reset();
 
@@ -535,52 +527,76 @@ export class QueryCompiler {
     const params: Record<string, unknown> = {};
     const primaryKey = this.findPrimaryKey(nodeConfig) || 'id';
 
-    let matchCondition: string;
-    if (where.id) {
-      matchCondition = `${alias}.${primaryKey} = $matchId`;
-      params['matchId'] = where.id;
-    } else {
-      const whereClause = this.compileWhere(where, alias);
-      if (!whereClause.cypher) {
-        return { cypher: '', params: {} };
+    // MERGE requires an equality pattern on the node's unique identity.
+    let mergeValue: unknown;
+    let hasMergeValue = false;
+
+    const extractEq = (input: unknown): { value: unknown; ok: boolean } => {
+      if (input === undefined || input === null) return { value: undefined, ok: false };
+      if (
+        typeof input === 'object' &&
+        !(input instanceof Date) &&
+        !Array.isArray(input) &&
+        'eq' in (input as Record<string, unknown>)
+      ) {
+        return { value: (input as Record<string, unknown>)['eq'], ok: true };
       }
-      matchCondition = whereClause.cypher;
-      Object.assign(params, whereClause.params);
+      if (typeof input === 'object' && !(input instanceof Date) && !Array.isArray(input)) {
+        return { value: undefined, ok: false };
+      }
+      return { value: input, ok: true };
+    };
+
+    const idEq = extractEq(where.id);
+    if (idEq.ok) {
+      mergeValue = idEq.value;
+      hasMergeValue = true;
+    } else {
+      const pkEq = extractEq((where as Record<string, unknown>)[primaryKey]);
+      if (pkEq.ok) {
+        mergeValue = pkEq.value;
+        hasMergeValue = true;
+      }
     }
 
-    const createProps: string[] = [];
-    const createParams: Record<string, unknown> = {};
+    if (!hasMergeValue) {
+      throw new Error(
+        `compileUpsert requires an equality condition on the primary key "${primaryKey}" ` +
+          `(e.g. { ${primaryKey}: 'value' } or { id: 'value' }), but received: ${JSON.stringify(where)}`,
+      );
+    }
+
+    params['mergeKey'] = mergeValue;
+
+    const createSetClauses: string[] = [];
     for (const [key, value] of Object.entries(create)) {
       if (value === undefined) continue;
-      const pn = this.nextParam(`c_${key as string}`);
-      createProps.push(`${String(key)}: $${pn}`);
-      createParams[pn] = value;
+      const pn = this.nextParam(`c_${key}`);
+      createSetClauses.push(`${alias}.${String(key)} = $${pn}`);
+      params[pn] = value;
     }
 
-    const updateProps: string[] = [];
-    const updateParams: Record<string, unknown> = {};
+    const updateSetClauses: string[] = [];
     for (const [key, value] of Object.entries(update)) {
       if (value === undefined) continue;
-      const pn = this.nextParam(`u_${key as string}`);
-      updateProps.push(`${alias}.${String(key)} = $${pn}`);
-      updateParams[pn] = value;
+      const pn = this.nextParam(`u_${key}`);
+      updateSetClauses.push(`${alias}.${String(key)} = $${pn}`);
+      params[pn] = value;
     }
 
-    const mergedParams = { ...params, ...createParams, ...updateParams };
-
-    const cypher = `MERGE (${alias}:${label} { ${matchCondition} })
-ON CREATE SET ${createProps.map(p => { const parts = p.split(':'); return `${alias}.${parts[0] ?? ''} = $${(parts[1] ?? '').trim()}`; }).join(', ') || `${alias}.createdAt = datetime()`}
-ON MATCH SET ${updateProps.join(', ') || `${alias}.updatedAt = datetime()`}
+    const cypher = `MERGE (${alias}:${label} {${primaryKey}: $mergeKey})
+ON CREATE SET ${createSetClauses.join(', ') || `${alias}.createdAt = datetime()`}
+ON MATCH SET ${updateSetClauses.join(', ') || `${alias}.updatedAt = datetime()`}
 RETURN ${alias}`;
 
-    return { cypher, params: mergedParams };
+    return { cypher, params };
   }
 
   compileAggregate(
     label: string,
     aggregation: 'count' | 'sum' | 'avg' | 'min' | 'max',
     field?: string,
-    where?: WhereCondition<Record<string, unknown>>
+    where?: WhereCondition<Record<string, unknown>>,
   ): CompiledQuery {
     this.reset();
 
@@ -635,13 +651,12 @@ RETURN ${alias}`;
       direction?: 'IN' | 'OUT' | 'BOTH';
       limit?: number;
       orderBy?: 'asc' | 'desc';
-    }
+    },
   ): CompiledQuery {
     this.reset();
 
     const fromAlias = 'n';
     const toAlias = 'm';
-    const relAlias = 'r';
     const params: Record<string, unknown> = {};
 
     let fromClause: string;
@@ -701,7 +716,7 @@ RETURN ${alias}`;
       toWhere?: WhereCondition<Record<string, unknown>>;
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
-    }
+    },
   ): CompiledQuery {
     this.reset();
 
@@ -770,7 +785,7 @@ RETURN ${alias}`;
       toWhere?: WhereCondition<Record<string, unknown>>;
       maxDepth?: number;
       direction?: 'IN' | 'OUT' | 'BOTH';
-    }
+    },
   ): CompiledQuery {
     this.reset();
 

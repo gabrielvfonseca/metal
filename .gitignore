@@ -4,9 +4,11 @@ build
 *.tsbuildinfo
 .next
 coverage
+.turbo
 .env
 .env.local
 tmp
 temp
 *.log
 .DS_Store
+**/__generated__
