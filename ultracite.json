@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ultracite.ai/schema.json",
+  "linter": "biome",
+  "formatter": "biome",
+  "typeAware": false,
+  "editors": ["universal"],
+  "agents": ["universal"],
+  "frameworks": [],
+  "biome": {
+    "extends": "./biome.json"
+  },
+  "ci": {
+    "check": "pnpm lint",
+    "fix": "pnpm format"
+  }
+}

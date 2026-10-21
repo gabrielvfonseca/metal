@@ -1,0 +1,51 @@
+{
+  "name": "Metal OGM Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "runArgs": ["--init"],
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "installGlobalModules": true,
+      "globalPackages": []
+    },
+    "ghcr.io/devcontainers/features/pnpm:1": {
+      "version": "9"
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "biomejs.biome",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "vitest.explorer",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.biome": "explicit"
+        },
+        "typescript.preferences.importModuleSpecifier": "non-relative",
+        "biome.enabled": true,
+        "biome.lsp": true,
+        "files.associations": {
+          "biome.json": "jsonc",
+          "ultracite.json": "jsonc"
+        }
+      }
+    }
+  },
+  "forwardPorts": [7687, 7474, 3000],
+  "postCreateCommand": "pnpm install && pnpm build",
+  "remoteUser": "node",
+  "workspaceFolder": "/workspaces/metal"
+}
